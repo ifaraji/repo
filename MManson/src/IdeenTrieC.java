@@ -281,7 +281,7 @@ public class IdeenTrieC implements Serializable{
 			return key + " - not found";
 	}
 	
-	public String getRows(String key) {
+	public int[] getRows(String key) {
 		Node node = find(root, key);
 		if (node != null && node.stIdx > 0) {
 			StringBuilder val = new StringBuilder();
@@ -294,10 +294,33 @@ public class IdeenTrieC implements Serializable{
 					val.append(",");
 					val.append(j);
 				}
-			return val.toString();
+			String[] auxStrArray = val.toString().split(",");
+			int[] rows = new int[auxStrArray.length];
+			for (i = 0; i < auxStrArray.length; i++)
+				rows[i] = Integer.parseInt(auxStrArray[i]);
+			return rows;
 		}
 		else
-			return "";
+			return new int[0];
+	}
+	
+	public int[] getRows(String[] keys) {
+		int[][] aux = new int[keys.length][];
+		int i = 0;
+		int N = 0;
+		for (String key : keys) { 
+			aux[i] = getRows(key);
+			N += aux[i].length;
+			i++;
+		}
+		
+		int[] rows = new int[N];
+		int rowsIndex = 0;
+		
+		for (int j = 0; j < i; j++)
+			for (int k = 0; k < aux[j].length; k++)
+				rows[rowsIndex++] = aux[j][k];
+		return rows;
 	}
 	
 	//TODO hey! why collect when ST is there!!!!

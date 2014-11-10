@@ -68,21 +68,22 @@ public class QC implements Serializable{
     	return rowSet;
     } 
     
-    public int[] getRows(int columnIndex, String key){
-    	String s = columns[columnIndex].col.getRows(key);
-    	String[] sa = s.split(",");
-    	int l = sa.length;
-    	int[] a = new int[l];
-    	for (int i = 0; i < l; i++)
-    		a[i] = Integer.parseInt(sa[i]);
+    public int[] getRows(int columnIndex, String key){    	
+    	int[] a = columns[columnIndex].col.getRows(key);
     	return a;
     }
+    
+    public int[] getRows(int columnIndex, String[] key){    	
+    	int[] a = columns[columnIndex].col.getRows(key);
+    	return a;
+    }    
     
     public static void main(String[] args) throws IOException, ClassNotFoundException, SQLException {
     	QC qc;
 		Stopwatch stopwatch = new Stopwatch();
 		
-		String qcTableName = "..\\..\\my_mrps_sra_item_lvl.dat"; //"my_mrps_sra_lvl2_sum.dat"
+		String qcTableName = "..\\..\\my_mrps_sra_item_lvl.dat"; 
+		//String qcTableName = "..\\..\\my_mrps_sra_lvl2_sum.dat";
 		
 		File f = new File(qcTableName);
 		if (f.exists()) {
@@ -103,11 +104,11 @@ public class QC implements Serializable{
 	    	}*/
 		}
 		else {
-			DataLoader dl = DataLoader.getInstance("..\\..\\mmsil1.csv");	
-			//qc = new QC(new String[]{"tpc", "category_code", "brand", "product_type", "colour", "size1"}, dl.numOfRows());
-			qc = new QC(new String[]{"ITEM", "TPC", "CATEGORY_CODE", "CLASS_GROUP", "CLASS", "SUBCLASS", "BRAND", "COLOUR_IND",
+			DataLoader dl = DataLoader.getInstance("..\\..\\attrs.csv");	
+			qc = new QC(new String[]{"tpc", "category_code", "brand", "product_type", "colour", "size1"}, dl.numOfRows());
+			/*qc = new QC(new String[]{"ITEM", "TPC", "CATEGORY_CODE", "CLASS_GROUP", "CLASS", "SUBCLASS", "BRAND", "COLOUR_IND",
 									"SIZE1_IND", "SIZE2_IND", "ONLINE_IND", "STATUS", "STATUS_DESC", "ITEM_NAME", "ITEM_SHORT_DESC",
-									"ITEM_LONG_DESC", "MIN_PRICE", "MAX_PRICE", "IMAGE_ADDR"}, dl.numOfRows());	
+									"ITEM_LONG_DESC", "MIN_PRICE", "MAX_PRICE", "IMAGE_ADDR"}, dl.numOfRows());*/	
 			int rowCount = 0;
 			try {
 				while(dl.next()){ 		
@@ -152,11 +153,18 @@ public class QC implements Serializable{
 		
 		System.out.println(Arrays.deepToString(qc.getRow(10)));		
 		stopwatch.printElapsedtimeInMillisAndReset();
-						
-		/*System.out.println(Arrays.toString(qc.getRows(2, "adidas")));
+							
+		/*int[] a = qc.getRows(2, new String[] {"cher", "goddess"});
+		String[][] b = qc.getRows(a);
+		for (String[] c : b)
+			System.out.println(Arrays.deepToString(c));
+		stopwatch.printElapsedtimeInMillisAndReset();*/
+		
+		int[] a = qc.getRows(13, new String[] {"jaspper bedlinen", "lorne bedlinen"});
+		String[][] b = qc.getRows(a);
+		for (String[] c : b)
+			System.out.println(Arrays.deepToString(c));
 		stopwatch.printElapsedtimeInMillisAndReset();
 		
-		System.out.println(Arrays.deepToString(qc.getRows(qc.getRows(2, "adidas"))));
-		stopwatch.printElapsedtimeInMillisAndReset();*/
 	}
 }
