@@ -231,8 +231,3 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
-MManson/.classpath
-*.classpath
-MManson/.classpath
-MManson/.settings/org.eclipse.jdt.core.prefs
-*.class
