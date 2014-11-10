@@ -82,7 +82,7 @@ public class QC implements Serializable{
     	QC qc;
 		Stopwatch stopwatch = new Stopwatch();
 		
-		String qcTableName = "my_mrps_sra_item_lvl.dat"; //"my_mrps_sra_lvl2_sum.dat"
+		String qcTableName = "..\\..\\my_mrps_sra_item_lvl.dat"; //"my_mrps_sra_lvl2_sum.dat"
 		
 		File f = new File(qcTableName);
 		if (f.exists()) {
@@ -103,7 +103,7 @@ public class QC implements Serializable{
 	    	}*/
 		}
 		else {
-			DataLoader dl = DataLoader.getInstance("mmsil1.csv");	
+			DataLoader dl = DataLoader.getInstance("..\\..\\mmsil1.csv");	
 			//qc = new QC(new String[]{"tpc", "category_code", "brand", "product_type", "colour", "size1"}, dl.numOfRows());
 			qc = new QC(new String[]{"ITEM", "TPC", "CATEGORY_CODE", "CLASS_GROUP", "CLASS", "SUBCLASS", "BRAND", "COLOUR_IND",
 									"SIZE1_IND", "SIZE2_IND", "ONLINE_IND", "STATUS", "STATUS_DESC", "ITEM_NAME", "ITEM_SHORT_DESC",
@@ -119,7 +119,7 @@ public class QC implements Serializable{
 						}catch (ArrayIndexOutOfBoundsException e) {
 							qc.insert(i, "", rowCount);
 						}
-					if (rowCount % 1000 == 0)
+					if (rowCount % 5000 == 0)
 						System.out.println(rowCount + " rows inserted");
 				}
 			}
