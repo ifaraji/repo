@@ -16,44 +16,47 @@ import java.util.Scanner;
 public class IdeenTrieC implements Serializable{
 	
 	private static final long serialVersionUID = 1L;
-	private final int NO_OF_DISTINCT_KEYS = 100;
+	//private final int NO_OF_DISTINCT_KEYS = 100;
 	private final int NO_OF_ROWS = 1000000;	
 	
 	private class Node implements Serializable{
-
 		private static final long serialVersionUID = 1L;
-
-		private char[] key; //string memory : 40+2N bytes ==> should use char array (lose string convenience tho)
-		
+		private char[] key; //string memory : 40+2N bytes ==> should use char array (lose string convenience tho)		
 		private Node left;
 		private Node right;
 		private Node middle;
-
-		// TODO row indexes
-		//private String value;
-		
 		private int stIdx;
-	}
+	}	
 	
 	private Node root;
+	private boolean UK;
+	private boolean compressed;
+	
 	private int letterCase = 0;
 	private int N = 0; //num of distinct values
-	private int M = 0; //num of distinct values
+	//private int M = 0; //num of distinct values
 	
 	private char[][] ST;
-	
+	//private int[] CST;
 	private int[] ROWS;
-	
-	public IdeenTrieC(int letterCase, int numOfRows) {
-		this.letterCase = letterCase; 
 		
-		if (numOfRows > 0) {
-			ROWS = new int[numOfRows + 1];
-			ST = new char[NO_OF_DISTINCT_KEYS][];
+	public IdeenTrieC(int numOfRows, boolean unique, boolean compressed) {		
+		this.UK = unique;
+		this.compressed = compressed;
+		this.letterCase = 1; 		
+				
+		if (UK) {
+			/*if (numOfRows > 0) 
+				ST = new char[numOfRows + 1][];
+			else
+				ST = new char[NO_OF_DISTINCT_KEYS][];*/
 		}
 		else {
-			ROWS = new int[NO_OF_ROWS];
-			ST = new char[NO_OF_DISTINCT_KEYS][];
+			if (numOfRows > 0) 
+				ROWS = new int[numOfRows + 1];
+			else
+				ROWS = new int[NO_OF_ROWS];
+			//ST = new char[NO_OF_DISTINCT_KEYS][];
 		}
 	}
 	
@@ -101,22 +104,18 @@ public class IdeenTrieC implements Serializable{
 		if (node == null) {
 			node = new Node();
 			node.key = key.toCharArray();
-			//node.value = String.valueOf(value);
 			node.stIdx = ++N;
-			ROWS[value] = node.stIdx; 
+			if (!UK) ROWS[value] = node.stIdx; 
 			return node;
 		}
 		
 		int longestCommonPrefix = lcp(node.key, key.toCharArray());
 		
 		if (longestCommonPrefix > 0 && longestCommonPrefix == node.key.length && longestCommonPrefix == key.length()){ //exact match
-			//node.value += ", " + String.valueOf(value);
 			if (node.stIdx == 0)
 				node.stIdx = ++N;
-			ROWS[value] = node.stIdx;
+			if (!UK) ROWS[value] = node.stIdx;
 		}
-		/*else if (longestCommonPrefix > 0 && longestCommonPrefix == key.length())
-			node.value = value;*/
 		else if (longestCommonPrefix > 0 && longestCommonPrefix == node.key.length)
 			node.middle = insertR(node.middle, key.substring(longestCommonPrefix), value);
 		else if (longestCommonPrefix > 0)
@@ -137,11 +136,9 @@ public class IdeenTrieC implements Serializable{
 				
 		Node nRNK = new Node();
 		nRNK.key = remainingNodeKey;
-		//nRNK.value = node.value;
 		nRNK.middle = node.middle;
 		nRNK.stIdx = node.stIdx;
 
-		//node.value = "";
 		node.stIdx = 0;
 		node.middle = nRNK;
 		
@@ -149,7 +146,6 @@ public class IdeenTrieC implements Serializable{
 		if (remainingKey.length() > 0) {
 			nRK = new Node();
 			nRK.key = remainingKey.toCharArray();
-			//nRK.value = String.valueOf(value);
 			nRK.stIdx = ++N;
 
 			if (smaller(nRK.key, nRNK.key)) 
@@ -158,12 +154,54 @@ public class IdeenTrieC implements Serializable{
 				nRNK.right = nRK;
 		}
 		else {
-			//node.value = String.valueOf(value);
 			node.stIdx = ++N;
 		}
-		ROWS[value] = N;
+		if (!UK) ROWS[value] = N;
 		
 		return node;
+	}
+	
+	private void buildST(Node node, String path, String prefix){
+		if (node == null) return;
+		
+		buildST(node.left, path + "L", prefix);
+		
+		if (node.stIdx > 0 && compressed)
+			ST[node.stIdx] = path.toCharArray();
+		
+		if (node.stIdx > 0 && !compressed)
+			ST[node.stIdx] = (prefix + new String(node.key)).toCharArray();
+		
+		buildST(node.middle, path + "M", prefix + new String(node.key));
+		
+		buildST(node.right, path + "R", prefix);
+	}
+	
+	private String resolveSTValue(char[] stPath) {		
+		return resolveSTValue(root, stPath, 0);
+	}
+	
+	private String resolveSTValue(Node node, char[] stPath, int step) {
+		if (node == null) return ""; 
+		StringBuilder sb = new StringBuilder();
+		if (step == stPath.length) {
+			sb.append(node.key);
+		}
+		else if (stPath[step] == 'L') {
+			String s = resolveSTValue(node.left, stPath, ++step);
+			sb.append(s);
+		}
+		else if (stPath[step] == 'R') {
+			String s = resolveSTValue(node.right, stPath, ++step);
+			sb.append(s);
+		}
+		else if (stPath[step] == 'M') {
+			sb.append(node.key);
+			String s = resolveSTValue(node.middle, stPath, ++step);
+			sb.append(s);
+		}
+
+		return sb.toString();
 	}
 	
 	private Node find(Node node, String key) {
@@ -253,7 +291,7 @@ public class IdeenTrieC implements Serializable{
 		
 		root = insertR(root, key, value);
 		
-		if (N > M) {
+		/*if (N > M) {
 			try{
 				ST[++M] = key.toCharArray();
 			}catch(ArrayIndexOutOfBoundsException e){
@@ -265,11 +303,29 @@ public class IdeenTrieC implements Serializable{
 				for(int i = 0; i < aux.length; i++)
 					ST[i] = aux[i];
 			}
-		}
+		}*/
+	}
+	
+	public void finalize() {
+		/*if (compressed)
+			CST = new int[N+1];
+		else*/
+			ST = new char[N+1][];
+		buildST(root, "", "");
 	}
 	
 	public String getRowValue(int index) {
-		return new String(ST[ROWS[index]]);
+		if (UK){
+			if (compressed)
+				return resolveSTValue(ST[index]);
+			else
+				return new String(ST[index]);
+		}
+		
+		if (compressed)
+			return resolveSTValue(ST[ROWS[index]]);
+		else
+			return new String(ST[ROWS[index]]);
 	}
 	
 	//TODO clash of function by ST!!!!! :)
@@ -284,6 +340,8 @@ public class IdeenTrieC implements Serializable{
 	public int[] getRows(String key) {
 		Node node = find(root, key);
 		if (node != null && node.stIdx > 0) {
+			if (UK) 
+				return new int[] {node.stIdx + 1};
 			StringBuilder val = new StringBuilder();
 			int i = 1;
 			while(ROWS[i] != node.stIdx)
@@ -323,7 +381,7 @@ public class IdeenTrieC implements Serializable{
 		return rows;
 	}
 	
-	//TODO hey! why collect when ST is there!!!!
+	//TODO hey! why collect when ST is there!!!! Ahhhh! these keys are ordered
 	public Iterable<String> keys()
 	{ 
 		ArrayList<String> keys = new ArrayList<String>();
@@ -353,9 +411,9 @@ public class IdeenTrieC implements Serializable{
 		Stopwatch stopwatch = new Stopwatch();
 		IdeenTrieC it = null;
 				
-		File f = new File("ideenTrie.dat");
+		File f = new File("..\\..\\ideenTrie.dat");
 		if (f.exists()) {
-			FileInputStream file = new FileInputStream("ideenTrie.dat");
+			FileInputStream file = new FileInputStream("..\\..\\ideenTrie.dat");
 	        ObjectInputStream in = new ObjectInputStream(file);
 	        it = (IdeenTrieC) in.readObject();
 	        in.close();
@@ -363,8 +421,8 @@ public class IdeenTrieC implements Serializable{
 	        System.out.println("Deserialized...");
 		}
 		else {
-			DataLoader dl = DataLoader.getInstance("attrs.csv");	
-			it = new IdeenTrieC(1, dl.numOfRows());
+			DataLoader dl = DataLoader.getInstance("..\\..\\attrs.csv");	
+			it = new IdeenTrieC(dl.numOfRows(), false, true);
 			int rowCount = 0;
 			try {
 				while(dl.next()){ 		
@@ -372,19 +430,18 @@ public class IdeenTrieC implements Serializable{
 					String[] row = dl.getCurrentRow();
 					it.insert(row[2], rowCount);
 				}
+				it.finalize();				 
 			}
 			catch(Exception e) {
 				e.printStackTrace();
 			}
-			
-			System.gc();
-			
+						
 			System.out.println(rowCount + " keys inserted");
 			stopwatch.printElapsedtimeAndReset();
 			FileOutputStream file = null;
 			ObjectOutputStream out = null;
 			try {
-				file = new FileOutputStream("ideenTrie.dat");
+				file = new FileOutputStream("..\\..\\ideenTrie.dat");
 				out = new ObjectOutputStream(file);
 				out.writeObject(it);
 				System.out.println("Serialized...");
@@ -402,6 +459,10 @@ public class IdeenTrieC implements Serializable{
 			}
 		}
 		
+		for (int h = 1; h <= 150; h++)
+		System.out.println(it.getRowValue(h));
+		stopwatch.printElapsedtimeInMillisAndReset();
+		
 		Scanner scanner = new Scanner(System.in);
 		boolean b = true;
 		while(b) {
@@ -411,6 +472,7 @@ public class IdeenTrieC implements Serializable{
 			System.out.println("2-Look for a key");
 			System.out.println("3-List all keys which begin with a specific prefix");
 			System.out.println("4-List all keys which contain a specific substring");
+			System.out.println("5-Get row value");
 			System.out.print("Choice:");
 			try {
 				int input = scanner.nextInt();
@@ -463,6 +525,16 @@ public class IdeenTrieC implements Serializable{
 					stopwatch.printElapsedtime();					
 					break;
 				}
+				case 5:{
+					System.out.print("Row : ");
+					String key = scanner.next();
+					stopwatch.reset();
+					System.out.println("***********************");
+					System.out.println(it.getRowValue(Integer.parseInt(key)));
+					System.out.println("***********************");
+					stopwatch.printElapsedtimeInMillisAndReset();
+					break;
+				}				
 				default:
 					System.out.println("Invalid Choice");
 					break;
