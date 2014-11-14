@@ -1,12 +1,12 @@
 
 public class ByteUtils {
-	public static int bitStringToInt(String input, int base, int step) {
+	private static int bitStringToInt(String input, int base, int step) {
 		if (step == input.length()) return 0;
 		int i = (int)input.charAt(input.length() - (step + 1)) - 48;
 		return i * (int)Math.pow(base, step) + bitStringToInt(input, base, ++step);
 	}
 	
-	public static String intToBitString(int input, int base) {
+	private static String intToBitString(int input, int base) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(input % base);
 		if (input >= base)
@@ -14,7 +14,32 @@ public class ByteUtils {
 		return sb.toString();
 	}
 	
-	public static String lpad(String input, int paddedLength, char paddingCharacter) {
+	public static byte[] intToByteArray(int input) {
+		String bitString = intToBitString(input, 2);
+		int L = bitString.length();
+		int N = (int)Math.ceil(L / 7d); 
+		byte[] ba = new byte[N];
+		
+		int chunk = 0;
+		int index = 0;
+		while(index < ba.length) {
+			String tPath = substring(bitString, chunk, chunk + 7);
+			ba[index] = Byte.parseByte(tPath, 2);
+			chunk += 7;
+			index++;
+		}			
+		return ba;		
+	}
+	
+	public static int byteArrayToInt(byte[] input){
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < input.length; i++)
+			sb.append(lpad(intToBitString(input[i], 2), 7, '0'));				
+		int n = bitStringToInt(sb.toString(), 2, 0);
+		return n;
+	}
+	
+	private static String lpad(String input, int paddedLength, char paddingCharacter) {
 		StringBuilder sb = new StringBuilder(input);
 		while(sb.length() < paddedLength)
 			sb.insert(0, paddingCharacter);
@@ -43,7 +68,7 @@ public class ByteUtils {
 		return sb.toString();
 	}
 	
-	public static byte[] bitStringToByteArray(String bitString) {
+	private static byte[] bitStringToByteArray(String bitString) {
 		int L = bitString.length();
 		int N = (int)Math.ceil(L / 6d); 
 		byte[] ba = new byte[N];
