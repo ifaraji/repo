@@ -12,7 +12,6 @@ import java.util.Scanner;
 
 //TODO unique columns (no need for rows array!!!)
 //TODO first row occurrence (to improve performance by first index(rows array) lookup)
-//TODO So many ST-related clashes!!! consider moving symbols to the trie maybe!!! like a field holding the symbol in the node and rows pointing to the node 
 public class IdeenTrieC implements Serializable{
 	
 	private static final long serialVersionUID = 1L;
@@ -30,33 +29,22 @@ public class IdeenTrieC implements Serializable{
 	
 	private Node root;
 	private boolean UK;
-	private boolean compressed;
 	
 	private int letterCase = 0;
 	private int N = 0; //num of distinct values
-	//private int M = 0; //num of distinct values
 	
-	private char[][] ST;
-	//private int[] CST;
+	private byte[][] ST;
 	private int[] ROWS;
 		
-	public IdeenTrieC(int numOfRows, boolean unique, boolean compressed) {		
+	public IdeenTrieC(int numOfRows, boolean unique) {		
 		this.UK = unique;
-		this.compressed = compressed;
 		this.letterCase = 1; 		
 				
-		if (UK) {
-			/*if (numOfRows > 0) 
-				ST = new char[numOfRows + 1][];
-			else
-				ST = new char[NO_OF_DISTINCT_KEYS][];*/
-		}
-		else {
+		if (!UK) {
 			if (numOfRows > 0) 
 				ROWS = new int[numOfRows + 1];
 			else
 				ROWS = new int[NO_OF_ROWS];
-			//ST = new char[NO_OF_DISTINCT_KEYS][];
 		}
 	}
 	
@@ -161,43 +149,42 @@ public class IdeenTrieC implements Serializable{
 		return node;
 	}
 	
-	private void buildST(Node node, String path, String prefix){
+	private void buildST(Node node, String path){
 		if (node == null) return;
 		
-		buildST(node.left, path + "L", prefix);
+		buildST(node.left, path + "L");
+			
+		if (node.stIdx > 0)
+			ST[node.stIdx] = ByteUtils.pathToByteArray(path);
 		
-		if (node.stIdx > 0 && compressed)
-			ST[node.stIdx] = path.toCharArray();
+		buildST(node.middle, path + "M");
 		
-		if (node.stIdx > 0 && !compressed)
-			ST[node.stIdx] = (prefix + new String(node.key)).toCharArray();
-		
-		buildST(node.middle, path + "M", prefix + new String(node.key));
-		
-		buildST(node.right, path + "R", prefix);
+		buildST(node.right, path + "R");
 	}
 	
-	private String resolveSTValue(char[] stPath) {		
-		return resolveSTValue(root, stPath, 0);
+	private String resolveSTValue(byte[] input) {	
+		String path = ByteUtils.byteArrayToPath(input);
+		return resolveSTValue(root, path, 0);
 	}
 	
-	private String resolveSTValue(Node node, char[] stPath, int step) {
-		if (node == null) return ""; 
+	private String resolveSTValue(Node node, String path, int step) {
+		if (node == null) return "";
+		
 		StringBuilder sb = new StringBuilder();
-		if (step == stPath.length) {
+		if (step == path.length()) {
 			sb.append(node.key);
 		}
-		else if (stPath[step] == 'L') {
-			String s = resolveSTValue(node.left, stPath, ++step);
+		else if (path.charAt(step) == 'L') {
+			String s = resolveSTValue(node.left, path, ++step);
 			sb.append(s);
 		}
-		else if (stPath[step] == 'R') {
-			String s = resolveSTValue(node.right, stPath, ++step);
-			sb.append(s);
-		}
-		else if (stPath[step] == 'M') {
+		else if (path.charAt(step) == 'M') {
 			sb.append(node.key);
-			String s = resolveSTValue(node.middle, stPath, ++step);
+			String s = resolveSTValue(node.middle, path, ++step);
+			sb.append(s);
+		}
+		else if (path.charAt(step) == 'R') {
+			String s = resolveSTValue(node.right, path, ++step);
 			sb.append(s);
 		}
 
@@ -307,28 +294,17 @@ public class IdeenTrieC implements Serializable{
 	}
 	
 	public void finalize() {
-		/*if (compressed)
-			CST = new int[N+1];
-		else*/
-			ST = new char[N+1][];
-		buildST(root, "", "");
+		ST = new byte[N+1][];
+		buildST(root, "");
 	}
 	
 	public String getRowValue(int index) {
-		if (UK){
-			if (compressed)
-				return resolveSTValue(ST[index]);
-			else
-				return new String(ST[index]);
-		}
-		
-		if (compressed)
-			return resolveSTValue(ST[ROWS[index]]);
+		if (UK)
+			return resolveSTValue(ST[index]);
 		else
-			return new String(ST[ROWS[index]]);
+			return resolveSTValue(ST[ROWS[index]]);
 	}
 	
-	//TODO clash of function by ST!!!!! :)
 	public String find(String key) {
 		Node node = find(root, key);
 		if (node != null && node.stIdx > 0)//if (node != null && node.value.length() != 0)
@@ -381,7 +357,6 @@ public class IdeenTrieC implements Serializable{
 		return rows;
 	}
 	
-	//TODO hey! why collect when ST is there!!!! Ahhhh! these keys are ordered
 	public Iterable<String> keys()
 	{ 
 		ArrayList<String> keys = new ArrayList<String>();
@@ -422,7 +397,7 @@ public class IdeenTrieC implements Serializable{
 		}
 		else {
 			DataLoader dl = DataLoader.getInstance("..\\..\\attrs.csv");	
-			it = new IdeenTrieC(dl.numOfRows(), false, true);
+			it = new IdeenTrieC(dl.numOfRows(), false);
 			int rowCount = 0;
 			try {
 				while(dl.next()){ 		
@@ -459,8 +434,8 @@ public class IdeenTrieC implements Serializable{
 			}
 		}
 		
-		for (int h = 1; h <= 150; h++)
-		System.out.println(it.getRowValue(h));
+		for (int h = 1; h <= 180; h++)
+		System.out.println(h + ": "+ it.getRowValue(h));
 		stopwatch.printElapsedtimeInMillisAndReset();
 		
 		Scanner scanner = new Scanner(System.in);

@@ -32,7 +32,7 @@ public class QC implements Serializable{
     	for(int i = 0; i < M; i++){
     		columns[i] = new Column();
     		columns[i].name = cols[i];
-    		columns[i].col = new IdeenTrieC(numOfRows, false, false);
+    		columns[i].col = new IdeenTrieC(numOfRows, false);
     	}
     }
     
@@ -43,11 +43,11 @@ public class QC implements Serializable{
     	for(int i = 0; i < M; i++){
     		columns[i] = new Column();
     		columns[i].name = cols[i];
-    		columns[i].col = new IdeenTrieC(numOfRows, i == uniqueColumnIndex ? true : false, true);
+    		columns[i].col = new IdeenTrieC(numOfRows, i == uniqueColumnIndex ? true : false);
     	}
     }
     
-    public QC(String[] cols, int numOfRows, int uniqueColumnIndex, int[] compressedColsIndexes){   
+    /*public QC(String[] cols, int numOfRows, int uniqueColumnIndex, int[] compressedColsIndexes){   
     	M = cols.length;
     	columns = new Column[M];
     	
@@ -60,7 +60,7 @@ public class QC implements Serializable{
     				compressed = true;
     		columns[i].col = new IdeenTrieC(numOfRows, i == uniqueColumnIndex ? true : false, compressed);
     	}
-    }
+    }*/
     
     public QC insert(int columnId, String columnValue, int rowIndex) {
     	columns[columnId].col.insert(columnValue, rowIndex);
@@ -117,7 +117,7 @@ public class QC implements Serializable{
 		String qcTableName = "..\\..\\my_mrps_sra_item_lvl1.dat"; 
 		//String qcTableName = "..\\..\\my_mrps_sra_lvl2_sum.dat";
 		
-		File f = new File(qcTableName+"T");
+		File f = new File(qcTableName);
 		if (f.exists()) {
 			FileInputStream file = new FileInputStream(qcTableName);
 	        ObjectInputStream in = new ObjectInputStream(file);
@@ -140,7 +140,7 @@ public class QC implements Serializable{
 			//qc = new QC(new String[]{"tpc", "category_code", "brand", "product_type", "colour", "size1"}, dl.numOfRows());
 			qc = new QC(new String[]{"ITEM", "TPC", "CATEGORY_CODE", "CLASS_GROUP", "CLASS", "SUBCLASS", "BRAND", "COLOUR_IND",
 									"SIZE1_IND", "SIZE2_IND", "ONLINE_IND", "STATUS", "STATUS_DESC", "ITEM_NAME", "ITEM_SHORT_DESC",
-									"ITEM_LONG_DESC", "MIN_PRICE", "MAX_PRICE", "IMAGE_ADDR"}, dl.numOfRows(), 0, new int[] {13,14,15,16,17,18});	
+									"ITEM_LONG_DESC", "MIN_PRICE", "MAX_PRICE", "IMAGE_ADDR"}, dl.numOfRows(), 0/*, new int[] {13,14,15,16,17,18}*/);	
 			int rowCount = 0;
 			try {
 				while(dl.next()){ 		
