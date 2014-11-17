@@ -49,6 +49,8 @@ public class IdeenTrieC implements Serializable{
 				//ROWS = new byte[NO_OF_ROWS][];
 				ROWS = new int[NO_OF_ROWS];
 		}
+		
+		buildDefaultNumberITree();
 	}
 	
 	/**
@@ -120,6 +122,28 @@ public class IdeenTrieC implements Serializable{
 		return node;
 	}
 	
+	private Node insertRDefaultTree(Node node, String key, int value) {
+		if (node == null) {
+			node = new Node();
+			node.key = key.toCharArray();
+			return node;
+		}
+		
+		int longestCommonPrefix = lcp(node.key, key.toCharArray());
+		
+		if (longestCommonPrefix > 0 && longestCommonPrefix == node.key.length && longestCommonPrefix == key.length()){ //exact match
+		}
+		else if (longestCommonPrefix > 0 && longestCommonPrefix == node.key.length)
+			node.middle = insertR(node.middle, key.substring(longestCommonPrefix), value);
+		else if (longestCommonPrefix > 0)
+			node = splitDefaultTree(node, longestCommonPrefix, key, value);
+		else if (smaller(key.toCharArray(), node.key))
+			node.left = insertR(node.left, key, value);
+		else if (bigger(key.toCharArray(), node.key))
+			node.right = insertR(node.right, key, value);
+		return node;
+	}
+	
 	private Node split(Node node, int longestCommonPrefix, String key, int value) {
 		char[] remainingNodeKey = CharArrayUtil.substring(node.key, longestCommonPrefix);
 		String remainingKey = key.substring(longestCommonPrefix);
@@ -153,6 +177,47 @@ public class IdeenTrieC implements Serializable{
 		if (!UK) ROWS[value] = N;
 		
 		return node;
+	}	
+	
+	private Node splitDefaultTree(Node node, int longestCommonPrefix, String key, int value) {
+		char[] remainingNodeKey = CharArrayUtil.substring(node.key, longestCommonPrefix);
+		String remainingKey = key.substring(longestCommonPrefix);
+		char[] theLongestCommonPrefix = CharArrayUtil.substring(node.key, 0, longestCommonPrefix);
+		
+		node.key = theLongestCommonPrefix;
+				
+		Node nRNK = new Node();
+		nRNK.key = remainingNodeKey;
+		nRNK.middle = node.middle;
+
+		node.middle = nRNK;
+		
+		Node nRK = null;
+		if (remainingKey.length() > 0) {
+			nRK = new Node();
+			nRK.key = remainingKey.toCharArray();
+
+			if (smaller(nRK.key, nRNK.key)) 
+				nRNK.left = nRK;
+			else
+				nRNK.right = nRK;
+		}
+		else {
+		}
+		
+		return node;
+	}	
+	
+	private void buildDefaultNumberITree() {
+		root = insertRDefaultTree(root, "5", 0);
+		root = insertRDefaultTree(root, "3", 0);
+		root = insertRDefaultTree(root, "7", 0);
+		root = insertRDefaultTree(root, "2", 0);
+		root = insertRDefaultTree(root, "4", 0);
+		root = insertRDefaultTree(root, "6", 0);
+		root = insertRDefaultTree(root, "8", 0);
+		root = insertRDefaultTree(root, "1", 0);
+		root = insertRDefaultTree(root, "9", 0);
 	}
 	
 	private void buildST(Node node, String path){
@@ -422,7 +487,7 @@ public class IdeenTrieC implements Serializable{
 						
 			System.out.println(rowCount + " keys inserted");
 			stopwatch.printElapsedtimeAndReset();
-			FileOutputStream file = null;
+			/*FileOutputStream file = null;
 			ObjectOutputStream out = null;
 			try {
 				file = new FileOutputStream("..\\..\\ideenTrie.dat");
@@ -440,10 +505,10 @@ public class IdeenTrieC implements Serializable{
 			finally {
 				out.close();
 				file.close();				
-			}
+			}*/
 		}
 
-		FileOutputStream file = null;
+		/*FileOutputStream file = null;
 		ObjectOutputStream out = null;
 		file = new FileOutputStream("..\\..\\ideenTrie.rows.dat");
 		out = new ObjectOutputStream(file);
@@ -454,7 +519,7 @@ public class IdeenTrieC implements Serializable{
 		out = new ObjectOutputStream(file);
 		out.writeObject(it.ST);
 		out.close();
-		file.close();
+		file.close();*/
 		
 		/*for (int h = 1; h <= 180; h++)
 		System.out.println(h + ": "+ it.getRowValue(h));

@@ -1,5 +1,17 @@
+import java.util.Arrays;
+
 
 public class ByteUtils {
+	private static String byteArrayToString(byte[] ba) {
+		StringBuilder sb = new StringBuilder("[");
+		for (int i = 0; i < ba.length; i++)
+			sb.append(ba[i] + ", ");
+		sb.deleteCharAt(sb.length()-1);
+		sb.deleteCharAt(sb.length()-1);
+		sb.append("]");
+		return sb.toString();
+	}
+	
 	private static int bitStringToInt(String input, int base, int step) {
 		if (step == input.length()) return 0;
 		int i = (int)input.charAt(input.length() - (step + 1)) - 48;
@@ -68,8 +80,7 @@ public class ByteUtils {
 		return sb.toString();
 	}
 	
-	private static byte[] bitStringToByteArray(String bitString) {
-		//System.out.println(bitString + ": " + bitStringToInt(bitString, 2, 0));
+	private static byte[] bitStringToByteArray(String bitString) {		
 		int L = bitString.length();
 		int N = (int)Math.ceil(L / 6d); 
 		byte[] ba = new byte[N];
@@ -83,7 +94,7 @@ public class ByteUtils {
 			chunk += 6;
 			index++;
 		}	
-		
+		System.out.println(bitString + ": " + byteArrayToString(ba));
 		return ba;
 	}
 	
