@@ -126,14 +126,6 @@ public class QC implements Serializable{
 	        file.close();
 	        System.out.println("Deserialized...");
 	        stopwatch.printElapsedtimeAndReset();
-	        
-	    	/*for(int i = 0; i < qc.M; i++){
-		        FileOutputStream newFile = new FileOutputStream("col"+String.valueOf(i)+".dat");
-				ObjectOutputStream out = new ObjectOutputStream(newFile);
-				out.writeObject(qc.columns[i]);
-				out.close();
-				newFile.close();
-	    	}*/
 		}
 		else {
 			DataLoader dl = DataLoader.getInstance("..\\..\\mmsil1.csv");	
@@ -171,6 +163,14 @@ public class QC implements Serializable{
 				out.writeObject(qc);
 				System.out.println("Serialized...");
 				stopwatch.printElapsedtimeAndReset();
+				
+		    	for(int i = 0; i < qc.M; i++){
+			        file = new FileOutputStream("col"+String.valueOf(i)+".dat");
+					out = new ObjectOutputStream(file);
+					out.writeObject(qc.columns[i]);
+					out.close();
+					file.close();
+		    	}
 			}
 			catch(OutOfMemoryError o) {
 				System.out.println("Failed to serialize qc data");
