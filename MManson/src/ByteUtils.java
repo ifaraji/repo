@@ -69,6 +69,7 @@ public class ByteUtils {
 	}
 	
 	private static byte[] bitStringToByteArray(String bitString) {
+		//System.out.println(bitString + ": " + bitStringToInt(bitString, 2, 0));
 		int L = bitString.length();
 		int N = (int)Math.ceil(L / 6d); 
 		byte[] ba = new byte[N];

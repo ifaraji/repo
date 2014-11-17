@@ -34,8 +34,8 @@ public class IdeenTrieC implements Serializable{
 	private int N = 0; //num of distinct values
 	
 	private byte[][] ST;
-	//private int[] ROWS;
-	private byte[][] ROWS;
+	private int[] ROWS;
+	//private byte[][] ROWS;
 		
 	public IdeenTrieC(int numOfRows, boolean unique) {		
 		this.UK = unique;
@@ -43,9 +43,11 @@ public class IdeenTrieC implements Serializable{
 				
 		if (!UK) {
 			if (numOfRows > 0) 
-				ROWS = new byte[numOfRows + 1][];
+				//ROWS = new byte[numOfRows + 1][];
+				ROWS = new int[numOfRows + 1];
 			else
-				ROWS = new byte[NO_OF_ROWS][];
+				//ROWS = new byte[NO_OF_ROWS][];
+				ROWS = new int[NO_OF_ROWS];
 		}
 	}
 	
@@ -94,7 +96,8 @@ public class IdeenTrieC implements Serializable{
 			node = new Node();
 			node.key = key.toCharArray();
 			node.stIdx = ++N;
-			if (!UK) ROWS[value] = ByteUtils.intToByteArray(node.stIdx); 
+			//if (!UK) ROWS[value] = ByteUtils.intToByteArray(node.stIdx); 
+			if (!UK) ROWS[value] = node.stIdx;
 			return node;
 		}
 		
@@ -103,7 +106,8 @@ public class IdeenTrieC implements Serializable{
 		if (longestCommonPrefix > 0 && longestCommonPrefix == node.key.length && longestCommonPrefix == key.length()){ //exact match
 			if (node.stIdx == 0)
 				node.stIdx = ++N;
-			if (!UK) ROWS[value] = ByteUtils.intToByteArray(node.stIdx);
+			//if (!UK) ROWS[value] = ByteUtils.intToByteArray(node.stIdx);
+			if (!UK) ROWS[value] = node.stIdx;
 		}
 		else if (longestCommonPrefix > 0 && longestCommonPrefix == node.key.length)
 			node.middle = insertR(node.middle, key.substring(longestCommonPrefix), value);
@@ -145,7 +149,8 @@ public class IdeenTrieC implements Serializable{
 		else {
 			node.stIdx = ++N;
 		}
-		if (!UK) ROWS[value] = ByteUtils.intToByteArray(N);
+		//if (!UK) ROWS[value] = ByteUtils.intToByteArray(N);
+		if (!UK) ROWS[value] = N;
 		
 		return node;
 	}
@@ -303,7 +308,8 @@ public class IdeenTrieC implements Serializable{
 		if (UK)
 			return resolveSTValue(ST[index]);
 		else
-			return resolveSTValue(ST[ ByteUtils.byteArrayToInt(ROWS[index]) ]);
+			//return resolveSTValue(ST[ ByteUtils.byteArrayToInt(ROWS[index]) ]);
+			return resolveSTValue(ST[ ROWS[index] ]);
 	}
 	
 	public String find(String key) {
@@ -321,11 +327,13 @@ public class IdeenTrieC implements Serializable{
 				return new int[] {node.stIdx + 1};
 			StringBuilder val = new StringBuilder();
 			int i = 1;
-			while(ByteUtils.byteArrayToInt(ROWS[i]) != node.stIdx)
+			//while(ByteUtils.byteArrayToInt(ROWS[i]) != node.stIdx)
+			while(ROWS[i] != node.stIdx)	
 				i++;
 			val.append(i);
 			for (int j = i+1; j < ROWS.length; j++)
-				if (ByteUtils.byteArrayToInt(ROWS[j]) == node.stIdx) {
+				//if (ByteUtils.byteArrayToInt(ROWS[j]) == node.stIdx) {
+				if (ROWS[j] == node.stIdx) {
 					val.append(",");
 					val.append(j);
 				}
@@ -397,14 +405,14 @@ public class IdeenTrieC implements Serializable{
 	        System.out.println("Deserialized...");
 		}
 		else {
-			DataLoader dl = DataLoader.getInstance("..\\..\\attrs.csv");	
+			DataLoader dl = DataLoader.getInstance("..\\..\\mmsil1.csv");	
 			it = new IdeenTrieC(dl.numOfRows(), false);
 			int rowCount = 0;
 			try {
 				while(dl.next()){ 		
 					rowCount++;
 					String[] row = dl.getCurrentRow();
-					it.insert(row[2], rowCount);
+					it.insert(row[0], rowCount);
 				}
 				it.finalize();				 
 			}
@@ -434,10 +442,23 @@ public class IdeenTrieC implements Serializable{
 				file.close();				
 			}
 		}
+
+		FileOutputStream file = null;
+		ObjectOutputStream out = null;
+		file = new FileOutputStream("..\\..\\ideenTrie.rows.dat");
+		out = new ObjectOutputStream(file);
+		out.writeObject(it.ROWS);
+		out.close();
+		file.close();
+		file = new FileOutputStream("..\\..\\ideenTrie.st.dat");
+		out = new ObjectOutputStream(file);
+		out.writeObject(it.ST);
+		out.close();
+		file.close();
 		
-		for (int h = 1; h <= 180; h++)
+		/*for (int h = 1; h <= 180; h++)
 		System.out.println(h + ": "+ it.getRowValue(h));
-		stopwatch.printElapsedtimeInMillisAndReset();
+		stopwatch.printElapsedtimeInMillisAndReset();*/
 		
 		Scanner scanner = new Scanner(System.in);
 		boolean b = true;

@@ -165,7 +165,7 @@ public class QC implements Serializable{
 				stopwatch.printElapsedtimeAndReset();
 				
 		    	for(int i = 0; i < qc.M; i++){
-			        file = new FileOutputStream("col"+String.valueOf(i)+".dat");
+			        file = new FileOutputStream("..\\..\\col"+String.valueOf(i)+".dat");
 					out = new ObjectOutputStream(file);
 					out.writeObject(qc.columns[i]);
 					out.close();
