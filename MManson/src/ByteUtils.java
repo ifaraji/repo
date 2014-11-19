@@ -1,5 +1,3 @@
-import java.util.Arrays;
-
 
 public class ByteUtils {
 	private static String byteArrayToString(byte[] ba) {
@@ -94,13 +92,15 @@ public class ByteUtils {
 			chunk += 6;
 			index++;
 		}	
-		System.out.println(bitString + ": " + byteArrayToString(ba));
+		//System.out.println(bitString + ": " + byteArrayToString(ba));
 		return ba;
 	}
 	
 	public static byte[] pathToByteArray(String path) {
 		String bits = pathToBitString(path);
 		byte[] ba = bitStringToByteArray(bits);
+		if (ba.length == 0) 
+			System.out.println(path + " - " );
 		return ba;
 	}
 	

@@ -1,11 +1,6 @@
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 
@@ -61,13 +56,6 @@ public class DataLoader implements Serializable
 			rows[i] = aux[i];		
 	}
 	
-	/*public String[] getRow(int i) {
-		String[] row = new String[1];
-		row = rows[i].clone();
-		rows[i] = null;
-		return row;
-	}*/
-	
 	public boolean next(){
 		C++;
 		if (C < N)
@@ -90,38 +78,6 @@ public class DataLoader implements Serializable
 		System.out.println("Loading data ...");
 		DataLoader dl = null;
 		dl = new DataLoader(filename);
-		/*File f = new File(filename+".dat");
-		if (f.exists()) {
-			FileInputStream file = new FileInputStream(filename+".dat");
-	        ObjectInputStream in = new ObjectInputStream(file);
-	        dl = (DataLoader)in.readObject();
-	        in.close();
-	        file.close();
-	        System.out.println("DL Deserialized...");				
-		}
-		else {
-			FileOutputStream file = null;
-			ObjectOutputStream out = null;
-			try {
-				dl = new DataLoader(filename);
-				file = new FileOutputStream(filename+".dat");
-				out = new ObjectOutputStream(file);
-				out.writeObject(dl);
-				System.out.println("Loaded");
-			}
-			catch(OutOfMemoryError o){
-				System.out.println("Failed to serialize raw data");
-				o.printStackTrace();
-				f = new File(filename+".dat");
-				if (f.exists()) 
-					f.delete();
-			}
-			finally{
-				out.close();
-				file.close();
-			}
-		}*/
-
 		return dl;
 	}
 }

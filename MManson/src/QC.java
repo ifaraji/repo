@@ -164,13 +164,13 @@ public class QC implements Serializable{
 				System.out.println("Serialized...");
 				stopwatch.printElapsedtimeAndReset();
 				
-		    	for(int i = 0; i < qc.M; i++){
+		    	/*for(int i = 0; i < qc.M; i++){
 			        file = new FileOutputStream("..\\..\\col"+String.valueOf(i)+".dat");
 					out = new ObjectOutputStream(file);
 					out.writeObject(qc.columns[i]);
 					out.close();
 					file.close();
-		    	}
+		    	}*/
 			}
 			catch(OutOfMemoryError o) {
 				System.out.println("Failed to serialize qc data");

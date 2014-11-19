@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
+import bytebuffers.ByteBufferI;
+import bytebuffers.IByteBuffer;
+
 //TODO unique columns (no need for rows array!!!)
 //TODO first row occurrence (to improve performance by first index(rows array) lookup)
 public class IdeenTrieC implements Serializable{
@@ -33,7 +36,8 @@ public class IdeenTrieC implements Serializable{
 	private int letterCase = 0;
 	private int N = 0; //num of distinct values
 	
-	private byte[][] ST;
+	private IByteBuffer[] ST;
+	//private byte[][] ST;
 	private int[] ROWS;
 	//private byte[][] ROWS;
 		
@@ -226,7 +230,7 @@ public class IdeenTrieC implements Serializable{
 		buildST(node.left, path + "L");
 			
 		if (node.stIdx > 0)
-			ST[node.stIdx] = ByteUtils.pathToByteArray(path);
+			ST[node.stIdx] = ByteBufferI.getByteBuffer( ByteUtils.pathToByteArray(path) );
 		
 		buildST(node.middle, path + "M");
 		
@@ -347,6 +351,8 @@ public class IdeenTrieC implements Serializable{
 
 		key = (letterCase == 1) ? key.toLowerCase() : key;
 		
+		key = key.trim();
+		
 		root = insertR(root, key, value);
 		
 		/*if (N > M) {
@@ -365,16 +371,24 @@ public class IdeenTrieC implements Serializable{
 	}
 	
 	public void finalize() {
-		ST = new byte[N+1][];
+		ST = new IByteBuffer[N+1];
+		//ST = new byte[N+1][];
 		buildST(root, "");
+		
+		/*int M = 0;
+		for (int i = 0; i < ST.length; i++)
+			if (ST[i] != null)
+				M = Math.max(M, ST[i].length);
+		
+		System.out.println(ST.length + " - " + M);*/
 	}
 	
 	public String getRowValue(int index) {
 		if (UK)
-			return resolveSTValue(ST[index]);
+			return resolveSTValue(ST[index].getData());
 		else
 			//return resolveSTValue(ST[ ByteUtils.byteArrayToInt(ROWS[index]) ]);
-			return resolveSTValue(ST[ ROWS[index] ]);
+			return resolveSTValue(ST[ ROWS[index] ].getData());
 	}
 	
 	public String find(String key) {
@@ -487,7 +501,7 @@ public class IdeenTrieC implements Serializable{
 						
 			System.out.println(rowCount + " keys inserted");
 			stopwatch.printElapsedtimeAndReset();
-			/*FileOutputStream file = null;
+			FileOutputStream file = null;
 			ObjectOutputStream out = null;
 			try {
 				file = new FileOutputStream("..\\..\\ideenTrie.dat");
@@ -505,7 +519,7 @@ public class IdeenTrieC implements Serializable{
 			finally {
 				out.close();
 				file.close();				
-			}*/
+			}
 		}
 
 		/*FileOutputStream file = null;
