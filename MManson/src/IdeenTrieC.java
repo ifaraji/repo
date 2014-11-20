@@ -18,7 +18,6 @@ import java.util.Scanner;
 import bytebuffers.ByteBufferI;
 import bytebuffers.IByteBuffer;
 
-//TODO unique columns (no need for rows array!!!)
 //TODO first row occurrence (to improve performance by first index(rows array) lookup)
 public class IdeenTrieC implements Serializable{
 	
@@ -44,7 +43,6 @@ public class IdeenTrieC implements Serializable{
 	private IByteBuffer[] ST;
 	//private byte[][] ST;
 	private int[] ROWS;
-	//private byte[][] ROWS;
 		
 	public IdeenTrieC(int numOfRows, boolean unique) {		
 		this.UK = unique;
@@ -52,10 +50,8 @@ public class IdeenTrieC implements Serializable{
 				
 		if (!UK) {
 			if (numOfRows > 0) 
-				//ROWS = new byte[numOfRows + 1][];
 				ROWS = new int[numOfRows + 1];
 			else
-				//ROWS = new byte[NO_OF_ROWS][];
 				ROWS = new int[NO_OF_ROWS];
 		}
 		
@@ -107,7 +103,6 @@ public class IdeenTrieC implements Serializable{
 			node = new Node();
 			node.key = key.toCharArray();
 			node.stIdx = ++N;
-			//if (!UK) ROWS[value] = ByteUtils.intToByteArray(node.stIdx); 
 			if (!UK) ROWS[value] = node.stIdx;
 			return node;
 		}
@@ -117,7 +112,6 @@ public class IdeenTrieC implements Serializable{
 		if (longestCommonPrefix > 0 && longestCommonPrefix == node.key.length && longestCommonPrefix == key.length()){ //exact match
 			if (node.stIdx == 0)
 				node.stIdx = ++N;
-			//if (!UK) ROWS[value] = ByteUtils.intToByteArray(node.stIdx);
 			if (!UK) ROWS[value] = node.stIdx;
 		}
 		else if (longestCommonPrefix > 0 && longestCommonPrefix == node.key.length)
@@ -131,6 +125,7 @@ public class IdeenTrieC implements Serializable{
 		return node;
 	}
 	
+	@SuppressWarnings("unused")
 	private Node insertRDefaultTree(Node node, String key, int value) {
 		if (node == null) {
 			node = new Node();
@@ -182,7 +177,6 @@ public class IdeenTrieC implements Serializable{
 		else {
 			node.stIdx = ++N;
 		}
-		//if (!UK) ROWS[value] = ByteUtils.intToByteArray(N);
 		if (!UK) ROWS[value] = N;
 		
 		return node;
@@ -218,7 +212,7 @@ public class IdeenTrieC implements Serializable{
 	}	
 	
 	private void buildDefaultNumberITree() {
-		root = insertRDefaultTree(root, "5", 0);
+		/*root = insertRDefaultTree(root, "5", 0);
 		root = insertRDefaultTree(root, "3", 0);
 		root = insertRDefaultTree(root, "7", 0);
 		root = insertRDefaultTree(root, "2", 0);
@@ -226,7 +220,7 @@ public class IdeenTrieC implements Serializable{
 		root = insertRDefaultTree(root, "6", 0);
 		root = insertRDefaultTree(root, "8", 0);
 		root = insertRDefaultTree(root, "1", 0);
-		root = insertRDefaultTree(root, "9", 0);
+		root = insertRDefaultTree(root, "9", 0);*/
 	}
 	
 	private void buildST(Node node, String path){
@@ -299,7 +293,7 @@ public class IdeenTrieC implements Serializable{
 		
 		collect(node.left, prefix, keys);
 		
-		if (node.stIdx > 0) //if (node.value.length() > 0)
+		if (node.stIdx > 0) 
 			keys.add(prefix + new String(node.key));
 		collect(node.middle, prefix + new String(node.key), keys);
 		
@@ -360,19 +354,6 @@ public class IdeenTrieC implements Serializable{
 		
 		root = insertR(root, key, value);
 		
-		/*if (N > M) {
-			try{
-				ST[++M] = key.toCharArray();
-			}catch(ArrayIndexOutOfBoundsException e){
-				//int E = 0;//(ROWS.length - value)/3;
-				char[][] aux = new char[ST.length][];
-				for(int i = 0; i < ST.length; i++)
-					aux[i] = ST[i];
-				ST = new char[ST.length + NO_OF_DISTINCT_KEYS][];
-				for(int i = 0; i < aux.length; i++)
-					ST[i] = aux[i];
-			}
-		}*/
 	}
 	
 	public void finalize() {
@@ -380,26 +361,19 @@ public class IdeenTrieC implements Serializable{
 		//ST = new byte[N+1][];
 		buildST(root, "");
 		
-		/*int M = 0;
-		for (int i = 0; i < ST.length; i++)
-			if (ST[i] != null)
-				M = Math.max(M, ST[i].length);
-		
-		System.out.println(ST.length + " - " + M);*/
 	}
 	
 	public String getRowValue(int index) {
 		if (UK)
 			return resolveSTValue(ST[index].getData());
 		else
-			//return resolveSTValue(ST[ ByteUtils.byteArrayToInt(ROWS[index]) ]);
 			return resolveSTValue(ST[ ROWS[index] ].getData());
 	}
 	
 	public String find(String key) {
 		Node node = find(root, key);
-		if (node != null && node.stIdx > 0)//if (node != null && node.value.length() != 0)
-			return key + " : " + "found";//node.value;
+		if (node != null && node.stIdx > 0)
+			return key + " : " + "found";
 		else
 			return key + " - not found";
 	}
@@ -411,12 +385,10 @@ public class IdeenTrieC implements Serializable{
 				return new int[] {node.stIdx + 1};
 			StringBuilder val = new StringBuilder();
 			int i = 1;
-			//while(ByteUtils.byteArrayToInt(ROWS[i]) != node.stIdx)
 			while(ROWS[i] != node.stIdx)	
 				i++;
 			val.append(i);
 			for (int j = i+1; j < ROWS.length; j++)
-				//if (ByteUtils.byteArrayToInt(ROWS[j]) == node.stIdx) {
 				if (ROWS[j] == node.stIdx) {
 					val.append(",");
 					val.append(j);

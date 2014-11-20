@@ -111,7 +111,64 @@ public class QC implements Serializable{
     public int[] getRows(int columnIndex, String[] key){    	
     	int[] a = columns[columnIndex].col.getRows(key);
     	return a;
-    }    
+    }        
+
+    public int[] and(int[] rowset1, int[] rowset2){
+    	if ( (rowset1 == null || rowset1.length == 0) || (rowset2 == null || rowset2.length == 0) )
+    		return new int[0];
+    	
+    	int[] tResult = new int[Math.max(rowset1.length, rowset2.length)];
+    	int i = 0;
+    	int j = 0;
+    	int k = 0;
+    	
+    	while (i < rowset1.length && j < rowset2.length) {
+	    	while (i < rowset1.length && rowset1[i] < rowset2[j])	i++;
+	    	
+	    	while (j < rowset2.length && i < rowset1.length && rowset1[i] > rowset2[j])	j++;
+	    	
+	    	while (i < rowset1.length && j < rowset2.length && rowset1[i] == rowset2[j]){
+	    		tResult[k] = rowset1[i]; 
+	    		i++;
+	    		j++;
+	    		k++;
+	    	}
+    	}
+    	
+    	int[] result = new int[k];
+    	for (int h = 0; h < k; h++)
+    		result[h] = tResult[h];
+    	
+    	return result;
+    }
+    
+    public int[] or(int[] rowset1, int[] rowset2){
+    	if ( (rowset1 == null || rowset1.length == 0) && (rowset2 != null && rowset2.length > 0) )
+    		return rowset2;
+    	if ( (rowset2 == null || rowset2.length == 0) && (rowset1 != null && rowset1.length > 0) )
+    		return rowset1;
+    	
+    	int[] result = new int[rowset1.length + rowset2.length];
+    	
+    	int i = 0;
+    	int j = 0;
+    	int k = 0;    	
+    	
+    	while(k < result.length) {
+	    	while(i < rowset1.length && (j == rowset2.length || rowset1[i]<rowset2[j])){
+	    		result[k] = rowset1[i];
+	    		i++;
+	    		k++;
+	    	}
+	    	while(j < rowset2.length && (i == rowset1.length || rowset1[i]>rowset2[j])){
+	    		result[k] = rowset2[j];
+	    		j++;
+	    		k++;
+	    	}	    	
+    	}
+    	    	
+    	return result;
+    }
     
     public static void main(String[] args) throws IOException, ClassNotFoundException, SQLException {
     	QC qc;
@@ -187,7 +244,7 @@ public class QC implements Serializable{
 			}
 		}
 		
-		System.out.println(Arrays.deepToString(qc.getRow(10)));		
+		System.out.println(Arrays.deepToString(qc.getRow(65348)));		
 		stopwatch.printElapsedtimeInMillisAndReset();
 							
 		/*int[] a = qc.getRows(2, new String[] {"cher", "goddess"});
@@ -196,10 +253,20 @@ public class QC implements Serializable{
 			System.out.println(Arrays.deepToString(c));
 		stopwatch.printElapsedtimeInMillisAndReset();*/
 		
-		int[] a = qc.getRows(13, new String[] {"jaspper bedlinen", "lorne bedlinen"});
+		/*int[] a = qc.getRows(13, new String[] {"jaspper bedlinen", "lorne bedlinen"});
+		int[] a1 = qc.getRows(6, "heritage");
+		int[] a2 = qc.or(a,a1);		*/
+		
+		int[] a = qc.getRows(6, "heritage");
+		int[] a1 = qc.getRows(2, "500");
+		a = qc.and(a,a1);
+		a1 = qc.getRows(4, "13");
+		a = qc.and(a,a1);
 		String[][] b = qc.getRows(a);
+		int h = 0;
+		System.out.println(b.length + " rows found");
 		for (String[] c : b)
-			System.out.println(Arrays.deepToString(c));
+			System.out.println(++h + ") " + Arrays.deepToString(c));
 		stopwatch.printElapsedtimeInMillisAndReset();
 		
 	}
