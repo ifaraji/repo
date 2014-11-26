@@ -11,7 +11,6 @@ import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.Arrays;
 
-
 public class QC implements Serializable{
 
 	private static final long serialVersionUID = 1L;
@@ -24,15 +23,15 @@ public class QC implements Serializable{
     }
 
     //private Column first;    // beginning of bag <LL impl>
-    private int M; 		     //number of columns
+    private int colsCount; 		     //number of columns
     
     private Column[] columns;
        
     public QC(String[] cols, int numOfRows){   
-    	M = cols.length;
-    	columns = new Column[M];
+    	colsCount = cols.length;
+    	columns = new Column[colsCount];
     	
-    	for(int i = 0; i < M; i++){
+    	for(int i = 0; i < colsCount; i++){
     		columns[i] = new Column();
     		columns[i].name = cols[i];
     		columns[i].col = new IdeenTrieC(numOfRows, false);
@@ -40,10 +39,10 @@ public class QC implements Serializable{
     }
     
     public QC(String[] cols, int numOfRows, int uniqueColumnIndex){   
-    	M = cols.length;
-    	columns = new Column[M];
+    	colsCount = cols.length;
+    	columns = new Column[colsCount];
     	
-    	for(int i = 0; i < M; i++){
+    	for(int i = 0; i < colsCount; i++){
     		columns[i] = new Column();
     		columns[i].name = cols[i];
     		columns[i].col = new IdeenTrieC(numOfRows, i == uniqueColumnIndex ? true : false);
@@ -71,13 +70,13 @@ public class QC implements Serializable{
     }
     
     public void finalize() {
-    	for(int i = 0; i < M; i++){
+    	for(int i = 0; i < colsCount; i++){
     		columns[i].col.finalize();
     	}
     }
     
     public int numOfCols() {
-    	return M;
+    	return colsCount;
     }
     
     public String getColumnName(int columnIndex) {
@@ -89,20 +88,22 @@ public class QC implements Serializable{
     }
       
     public String[] getRow(int rowNum){
-    	String[] row = new String[M]; 
-    	for(int i = 0; i < M; i++)
+    	String[] row = new String[colsCount]; 
+    	for(int i = 0; i < colsCount; i++)
     		row[i] = columns[i].col.getRowValue(rowNum);
     	return row;
     }
     
+    //TODO should be overloaded to produce JSON,XML and streaming output
     public String[][] getRows(int[] rows){
-    	String[][] rowSet = new String[rows.length][M];    	
+    	String[][] rowSet = new String[rows.length][colsCount];    	
     	for(int i = 0; i < rows.length; i++) {
     		rowSet[i] = getRow(rows[i]);
     	}
     	return rowSet;
     } 
     
+    //TODO extract keywords from the key (splitting by space maybe) and perform an "AND" search (i.e. search for "brown boot" and "boot brown" should return the same result sets) 
     public int[] getRows(int columnIndex, String key){    	
     	int[] a = columns[columnIndex].col.getRows(key);
     	return a;
@@ -112,7 +113,8 @@ public class QC implements Serializable{
     	int[] a = columns[columnIndex].col.getRows(key);
     	return a;
     }        
-
+    
+    //TODO ensure the best algo will be impled
     public int[] and(int[] rowset1, int[] rowset2){
     	if ( (rowset1 == null || rowset1.length == 0) || (rowset2 == null || rowset2.length == 0) )
     		return new int[0];
@@ -142,6 +144,7 @@ public class QC implements Serializable{
     	return result;
     }
     
+  //TODO ensure the best algo will be impled
     public int[] or(int[] rowset1, int[] rowset2){
     	if ( (rowset1 == null || rowset1.length == 0) && (rowset2 != null && rowset2.length > 0) )
     		return rowset2;
@@ -192,13 +195,13 @@ public class QC implements Serializable{
 			//qc = new QC(new String[]{"tpc", "category_code", "brand", "product_type", "colour", "size1"}, dl.numOfRows());
 			qc = new QC(new String[]{"ITEM", "TPC", "CATEGORY_CODE", "CLASS_GROUP", "CLASS", "SUBCLASS", "BRAND", "COLOUR_IND",
 									"SIZE1_IND", "SIZE2_IND", "ONLINE_IND", "STATUS", "STATUS_DESC", "ITEM_NAME", "ITEM_SHORT_DESC",
-									"ITEM_LONG_DESC", "MIN_PRICE", "MAX_PRICE", "IMAGE_ADDR"}, dl.numOfRows(), 0/*, new int[] {13,14,15,16,17,18}*/);	
+									"ITEM_LONG_DESC", "MIN_PRICE", "MAX_PRICE", "IMAGE_ADDR"}, dl.numOfRows(), 0);	
 			int rowCount = 0;
 			try {
 				while(dl.next()){ 		
 					rowCount++;
 					String[] row = dl.getCurrentRow();
-					for (int i = 0; i < qc.M; i++) 
+					for (int i = 0; i < qc.colsCount; i++) 
 						try {
 							qc.insert(i, row[i], rowCount);
 						}catch (ArrayIndexOutOfBoundsException e) {
