@@ -1,15 +1,11 @@
 import helpers.DataLoader;
 import helpers.Stopwatch;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Scanner;
 
 public class QC implements Serializable{
 
@@ -177,76 +173,34 @@ public class QC implements Serializable{
     	QC qc;
 		Stopwatch stopwatch = new Stopwatch();
 		
-		String qcTableName = "..\\..\\my_mrps_sra_item_lvl1.dat"; 
-		//String qcTableName = "..\\..\\my_mrps_sra_lvl2_sum.dat";
-		
-		File f = new File(qcTableName);
-		if (f.exists()) {
-			FileInputStream file = new FileInputStream(qcTableName);
-	        ObjectInputStream in = new ObjectInputStream(file);
-	        qc = (QC) in.readObject();
-	        in.close();
-	        file.close();
-	        System.out.println("Deserialized...");
-	        stopwatch.printElapsedtimeAndReset();
+		DataLoader dl = DataLoader.getInstance("..\\..\\mmsil1.csv");	
+		//qc = new QC(new String[]{"tpc", "category_code", "brand", "product_type", "colour", "size1"}, dl.numOfRows());
+		qc = new QC(new String[]{"ITEM", "TPC", "CATEGORY_CODE", "CLASS_GROUP", "CLASS", "SUBCLASS", "BRAND", "COLOUR_IND",
+								"SIZE1_IND", "SIZE2_IND", "ONLINE_IND", "STATUS", "STATUS_DESC", "ITEM_NAME", "ITEM_SHORT_DESC",
+								"ITEM_LONG_DESC", "MIN_PRICE", "MAX_PRICE", "IMAGE_ADDR"}, dl.numOfRows(), 0);	
+		int rowCount = 0;
+		try {
+			while(dl.next()){ 		
+				rowCount++;
+				String[] row = dl.getCurrentRow();
+				for (int i = 0; i < qc.colsCount; i++) 
+					try {
+						qc.insert(i, row[i], rowCount);
+					}catch (ArrayIndexOutOfBoundsException e) {
+						qc.insert(i, "", rowCount);
+					}
+				if (rowCount % 5000 == 0)
+					System.out.println(rowCount + " rows inserted");
+			}
+			qc.finalize();
 		}
-		else {
-			DataLoader dl = DataLoader.getInstance("..\\..\\mmsil1.csv");	
-			//qc = new QC(new String[]{"tpc", "category_code", "brand", "product_type", "colour", "size1"}, dl.numOfRows());
-			qc = new QC(new String[]{"ITEM", "TPC", "CATEGORY_CODE", "CLASS_GROUP", "CLASS", "SUBCLASS", "BRAND", "COLOUR_IND",
-									"SIZE1_IND", "SIZE2_IND", "ONLINE_IND", "STATUS", "STATUS_DESC", "ITEM_NAME", "ITEM_SHORT_DESC",
-									"ITEM_LONG_DESC", "MIN_PRICE", "MAX_PRICE", "IMAGE_ADDR"}, dl.numOfRows(), 0);	
-			int rowCount = 0;
-			try {
-				while(dl.next()){ 		
-					rowCount++;
-					String[] row = dl.getCurrentRow();
-					for (int i = 0; i < qc.colsCount; i++) 
-						try {
-							qc.insert(i, row[i], rowCount);
-						}catch (ArrayIndexOutOfBoundsException e) {
-							qc.insert(i, "", rowCount);
-						}
-					if (rowCount % 5000 == 0)
-						System.out.println(rowCount + " rows inserted");
-				}
-				qc.finalize();
-			}
-			catch(Exception e) {
-				e.printStackTrace();
-			}
-		
-			System.out.println(rowCount + " keys inserted");
-			stopwatch.printElapsedtimeAndReset();
-			FileOutputStream file = null;
-			ObjectOutputStream out = null;
-			try {
-				file = new FileOutputStream(qcTableName);
-				out = new ObjectOutputStream(file);
-				out.writeObject(qc);
-				System.out.println("Serialized...");
-				stopwatch.printElapsedtimeAndReset();
-				
-		    	/*for(int i = 0; i < qc.M; i++){
-			        file = new FileOutputStream("..\\..\\col"+String.valueOf(i)+".dat");
-					out = new ObjectOutputStream(file);
-					out.writeObject(qc.columns[i]);
-					out.close();
-					file.close();
-		    	}*/
-			}
-			catch(OutOfMemoryError o) {
-				System.out.println("Failed to serialize qc data");
-				o.printStackTrace();
-				if (f.exists()) 
-					f.delete();				
-			}
-			finally {
-				out.close();
-				file.close();				
-			}
+		catch(Exception e) {
+			e.printStackTrace();
 		}
-		
+	
+		System.out.println(rowCount + " keys inserted");
+		stopwatch.printElapsedtimeAndReset();
+					
 		System.out.println(Arrays.deepToString(qc.getRow(65348)));		
 		stopwatch.printElapsedtimeInMillisAndReset();
 							
@@ -272,5 +226,9 @@ public class QC implements Serializable{
 			System.out.println(++h + ") " + Arrays.deepToString(c));
 		stopwatch.printElapsedtimeInMillisAndReset();
 		
+		Scanner scanner = new Scanner(System.in);
+		scanner.next();
+		
+		System.out.println("done");
 	}
 }
