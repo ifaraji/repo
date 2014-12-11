@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Scanner;
 
+//TODO sorted result set (requires the trie returns row nums based on its key sorted)
+//TODO master field search :) (wanna cater for a search scenario like google, just a text box and no dropdowns, full search criteria is entered in the text box like 'black leather pump'; all related fields should be searched)
 public class QC implements Serializable{
 
 	private static final long serialVersionUID = 1L;
@@ -91,6 +93,7 @@ public class QC implements Serializable{
     }
     
     //TODO should be overloaded to produce JSON,XML and streaming output
+    //TODO should be cater for pagination
     public String[][] getRows(int[] rows){
     	String[][] rowSet = new String[rows.length][colsCount];    	
     	for(int i = 0; i < rows.length; i++) {
@@ -99,34 +102,35 @@ public class QC implements Serializable{
     	return rowSet;
     } 
     
-    //TODO extract keywords from the key (splitting by space maybe) and perform an "AND" search (i.e. search for "brown boot" and "boot brown" should return the same result sets) 
-    public int[] getRows(int columnIndex, String key){    	
+    //TODO extract keywords from the key (splitting by space maybe) and perform an "AND" search (i.e. search for "brown boot" and "boot brown" should return the same result sets)
+    //TODO Just a note that the above will require a keyContains getRows method to be implemented by the col
+    public int[] getRowNumbers(int columnIndex, String key){    	
     	int[] a = columns[columnIndex].col.getRows(key);
     	return a;
     }
     
-    public int[] getRows(int columnIndex, String[] key){    	
+    public int[] getRowNumbers(int columnIndex, String[] key){    	
     	int[] a = columns[columnIndex].col.getRows(key);
     	return a;
     }        
     
     //TODO ensure the best algo will be impled
-    public int[] and(int[] rowset1, int[] rowset2){
-    	if ( (rowset1 == null || rowset1.length == 0) || (rowset2 == null || rowset2.length == 0) )
+    public int[] and(int[] rowNumbers1, int[] rowNumbers2){
+    	if ( (rowNumbers1 == null || rowNumbers1.length == 0) || (rowNumbers2 == null || rowNumbers2.length == 0) )
     		return new int[0];
     	
-    	int[] tResult = new int[Math.max(rowset1.length, rowset2.length)];
+    	int[] tResult = new int[Math.max(rowNumbers1.length, rowNumbers2.length)];
     	int i = 0;
     	int j = 0;
     	int k = 0;
     	
-    	while (i < rowset1.length && j < rowset2.length) {
-	    	while (i < rowset1.length && rowset1[i] < rowset2[j])	i++;
+    	while (i < rowNumbers1.length && j < rowNumbers2.length) {
+	    	while (i < rowNumbers1.length && rowNumbers1[i] < rowNumbers2[j])	i++;
 	    	
-	    	while (j < rowset2.length && i < rowset1.length && rowset1[i] > rowset2[j])	j++;
+	    	while (j < rowNumbers2.length && i < rowNumbers1.length && rowNumbers1[i] > rowNumbers2[j])	j++;
 	    	
-	    	while (i < rowset1.length && j < rowset2.length && rowset1[i] == rowset2[j]){
-	    		tResult[k] = rowset1[i]; 
+	    	while (i < rowNumbers1.length && j < rowNumbers2.length && rowNumbers1[i] == rowNumbers2[j]){
+	    		tResult[k] = rowNumbers1[i]; 
 	    		i++;
 	    		j++;
 	    		k++;
@@ -141,26 +145,26 @@ public class QC implements Serializable{
     }
     
   //TODO ensure the best algo will be impled
-    public int[] or(int[] rowset1, int[] rowset2){
-    	if ( (rowset1 == null || rowset1.length == 0) && (rowset2 != null && rowset2.length > 0) )
-    		return rowset2;
-    	if ( (rowset2 == null || rowset2.length == 0) && (rowset1 != null && rowset1.length > 0) )
-    		return rowset1;
+    public int[] or(int[] rowNumbers1, int[] rowNumbers2){
+    	if ( (rowNumbers1 == null || rowNumbers1.length == 0) && (rowNumbers2 != null && rowNumbers2.length > 0) )
+    		return rowNumbers2;
+    	if ( (rowNumbers2 == null || rowNumbers2.length == 0) && (rowNumbers1 != null && rowNumbers1.length > 0) )
+    		return rowNumbers1;
     	
-    	int[] result = new int[rowset1.length + rowset2.length];
+    	int[] result = new int[rowNumbers1.length + rowNumbers2.length];
     	
     	int i = 0;
     	int j = 0;
     	int k = 0;    	
     	
     	while(k < result.length) {
-	    	while(i < rowset1.length && (j == rowset2.length || rowset1[i]<rowset2[j])){
-	    		result[k] = rowset1[i];
+	    	while(i < rowNumbers1.length && (j == rowNumbers2.length || rowNumbers1[i]<rowNumbers2[j])){
+	    		result[k] = rowNumbers1[i];
 	    		i++;
 	    		k++;
 	    	}
-	    	while(j < rowset2.length && (i == rowset1.length || rowset1[i]>rowset2[j])){
-	    		result[k] = rowset2[j];
+	    	while(j < rowNumbers2.length && (i == rowNumbers1.length || rowNumbers1[i]>rowNumbers2[j])){
+	    		result[k] = rowNumbers2[j];
 	    		j++;
 	    		k++;
 	    	}	    	
@@ -214,10 +218,10 @@ public class QC implements Serializable{
 		int[] a1 = qc.getRows(6, "heritage");
 		int[] a2 = qc.or(a,a1);		*/
 		
-		int[] a = qc.getRows(6, "heritage");
-		int[] a1 = qc.getRows(2, "500");
+		int[] a = qc.getRowNumbers(6, "heritage");
+		int[] a1 = qc.getRowNumbers(2, "500");
 		a = qc.and(a,a1);
-		a1 = qc.getRows(4, "13");
+		a1 = qc.getRowNumbers(4, "13");
 		a = qc.and(a,a1);
 		String[][] b = qc.getRows(a);
 		int h = 0;

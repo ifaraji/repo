@@ -378,6 +378,7 @@ public class IdeenTrieC implements Serializable{
 			return key + " - not found";
 	}
 	
+	//TODO getRows keyContains needed
 	public int[] getRows(String key) {
 		Node node = find(root, key);
 		if (node != null && node.stIdx > 0) {
