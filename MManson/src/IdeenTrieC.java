@@ -15,8 +15,9 @@ import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
+import bytebuffers.AbstractByteBuffer;
 import bytebuffers.ByteBufferI;
-import bytebuffers.IByteBuffer;
+import bytebuffers.ByteBufferInterface;
 
 //TODO first row occurrence (to improve performance by first index(rows array) lookup)
 public class IdeenTrieC implements Serializable{
@@ -32,6 +33,7 @@ public class IdeenTrieC implements Serializable{
 		private Node right;
 		private Node middle;
 		private int stIdx;
+		private int O;
 	}	
 	
 	private Node root;
@@ -40,7 +42,7 @@ public class IdeenTrieC implements Serializable{
 	private int letterCase = 0;
 	private int N = 0; //num of distinct values
 	
-	private IByteBuffer[] ST;
+	private ByteBufferInterface[] ST;
 	//private byte[][] ST;
 	private int[] ROWS;
 		
@@ -103,6 +105,7 @@ public class IdeenTrieC implements Serializable{
 			node = new Node();
 			node.key = key.toCharArray();
 			node.stIdx = ++N;
+			node.O++;
 			if (!UK) ROWS[value] = node.stIdx;
 			return node;
 		}
@@ -112,6 +115,7 @@ public class IdeenTrieC implements Serializable{
 		if (longestCommonPrefix > 0 && longestCommonPrefix == node.key.length && longestCommonPrefix == key.length()){ //exact match
 			if (node.stIdx == 0)
 				node.stIdx = ++N;
+			node.O++;
 			if (!UK) ROWS[value] = node.stIdx;
 		}
 		else if (longestCommonPrefix > 0 && longestCommonPrefix == node.key.length)
@@ -124,7 +128,7 @@ public class IdeenTrieC implements Serializable{
 			node.right = insertR(node.right, key, value);
 		return node;
 	}
-	
+
 	@SuppressWarnings("unused")
 	private Node insertRDefaultTree(Node node, String key, int value) {
 		if (node == null) {
@@ -159,8 +163,10 @@ public class IdeenTrieC implements Serializable{
 		nRNK.key = remainingNodeKey;
 		nRNK.middle = node.middle;
 		nRNK.stIdx = node.stIdx;
+		nRNK.O = node.O;
 
 		node.stIdx = 0;
+		node.O = 0;
 		node.middle = nRNK;
 		
 		Node nRK = null;
@@ -168,6 +174,7 @@ public class IdeenTrieC implements Serializable{
 			nRK = new Node();
 			nRK.key = remainingKey.toCharArray();
 			nRK.stIdx = ++N;
+			nRK.O++;
 
 			if (smaller(nRK.key, nRNK.key)) 
 				nRNK.left = nRK;
@@ -176,12 +183,13 @@ public class IdeenTrieC implements Serializable{
 		}
 		else {
 			node.stIdx = ++N;
+			node.O++;
 		}
 		if (!UK) ROWS[value] = N;
 		
 		return node;
 	}	
-	
+
 	private Node splitDefaultTree(Node node, int longestCommonPrefix, String key, int value) {
 		char[] remainingNodeKey = CharArrayUtil.substring(node.key, longestCommonPrefix);
 		String remainingKey = key.substring(longestCommonPrefix);
@@ -228,12 +236,23 @@ public class IdeenTrieC implements Serializable{
 		
 		buildST(node.left, path + "L");
 			
-		if (node.stIdx > 0)
+		if (node.stIdx > 0) {
 			ST[node.stIdx] = ByteBufferI.getByteBuffer( ByteUtils.pathToByteArray(path) );
+			((AbstractByteBuffer)ST[node.stIdx]).createRows(node.O);
+		}
 		
 		buildST(node.middle, path + "M");
 		
 		buildST(node.right, path + "R");
+	}
+	
+	private void buildST2(){
+		if (!UK)
+			for (int i = 1; i < ROWS.length; i++) 
+				((AbstractByteBuffer)ST[ROWS[i]]).addRow(i);
+		else
+			for (int i = 1; i < ST.length; i++)
+				((AbstractByteBuffer)ST[i]).addRow(i);
 	}
 	
 	private String resolveSTValue(byte[] input) {	
@@ -345,6 +364,18 @@ public class IdeenTrieC implements Serializable{
 		collectContains(node.right, prefix, containsStr, keys);
 	}
 	
+	private int[] collectContains(Node node, String prefix, String containsStr) {
+		if (node == null) return null;
+		
+		collectContains(node.left, prefix, containsStr);
+		String nodeRealValue = prefix + new String(node.key);
+		if (node.stIdx > 0 && nodeRealValue.contains(containsStr))
+			((AbstractByteBuffer)ST[node.stIdx]).getRows();
+		collectContains(node.middle, nodeRealValue, containsStr);
+		
+		collectContains(node.right, prefix, containsStr);
+	}
+
 	public void insert(String key, int value) {
 		if (key == null || key.trim().length() == 0) key = "null";
 
@@ -357,10 +388,10 @@ public class IdeenTrieC implements Serializable{
 	}
 	
 	public void finalize() {
-		ST = new IByteBuffer[N+1];
+		ST = new ByteBufferInterface[N+1];
 		//ST = new byte[N+1][];
 		buildST(root, "");
-		
+		buildST2();
 	}
 	
 	public String getRowValue(int index) {
@@ -378,11 +409,10 @@ public class IdeenTrieC implements Serializable{
 			return key + " - not found";
 	}
 	
-	//TODO getRows keyContains needed
 	public int[] getRows(String key) {
 		Node node = find(root, key);
 		if (node != null && node.stIdx > 0) {
-			if (UK) 
+			/*if (UK) 
 				return new int[] {node.stIdx + 1};
 			StringBuilder val = new StringBuilder();
 			int i = 1;
@@ -398,11 +428,12 @@ public class IdeenTrieC implements Serializable{
 			int[] rows = new int[auxStrArray.length];
 			for (i = 0; i < auxStrArray.length; i++)
 				rows[i] = Integer.parseInt(auxStrArray[i]);
-			return rows;
+			return rows;*/
+			return ((AbstractByteBuffer)ST[node.stIdx]).getRows();
 		}
 		else
 			return new int[0];
-	}
+	}	
 	
 	public int[] getRows(String[] keys) {
 		int[][] aux = new int[keys.length][];
@@ -421,6 +452,12 @@ public class IdeenTrieC implements Serializable{
 			for (int k = 0; k < aux[j].length; k++)
 				rows[rowsIndex++] = aux[j][k];
 		return rows;
+	}
+		
+	//TODO 
+	public int[] getRowsContaining(String key){
+		
+		return null;
 	}
 	
 	public Iterable<String> keys()

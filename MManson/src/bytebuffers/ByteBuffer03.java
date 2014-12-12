@@ -1,13 +1,14 @@
 package bytebuffers;
 
 
-public class ByteBuffer03 implements IByteBuffer {
+public class ByteBuffer03 extends AbstractByteBuffer {
 	
 	private byte b0;
 	private byte b1;
 	private byte b2;
 	
 	public ByteBuffer03(byte[] input){
+		super();
 		b0 = input[0];
 		b1 = input[1];
 		b2 = input[2];

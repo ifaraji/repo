@@ -1,7 +1,7 @@
 package bytebuffers;
 
 
-public class ByteBuffer13 implements IByteBuffer{
+public class ByteBuffer13 extends AbstractByteBuffer {
 	private byte b0;
 	private byte b1;
 	private byte b2;
@@ -17,6 +17,7 @@ public class ByteBuffer13 implements IByteBuffer{
 	private byte b12;
 	
 	public ByteBuffer13(byte[] input){
+		super();
 		b0 = input[0];
 		b1 = input[1];
 		b2 = input[2];

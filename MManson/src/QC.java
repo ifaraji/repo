@@ -193,7 +193,7 @@ public class QC implements Serializable{
 					}catch (ArrayIndexOutOfBoundsException e) {
 						qc.insert(i, "", rowCount);
 					}
-				if (rowCount % 5000 == 0)
+				if (rowCount % 10000 == 0)
 					System.out.println(rowCount + " rows inserted");
 			}
 			qc.finalize();
@@ -207,7 +207,13 @@ public class QC implements Serializable{
 					
 		System.out.println(Arrays.deepToString(qc.getRow(65348)));		
 		stopwatch.printElapsedtimeInMillisAndReset();
-							
+
+		System.out.println(Arrays.deepToString(qc.getRow(100)));		
+		System.out.println(Arrays.deepToString(qc.getRow(150)));		
+		System.out.println(Arrays.deepToString(qc.getRow(200)));		
+		System.out.println(Arrays.deepToString(qc.getRow(250)));		
+		stopwatch.printElapsedtimeInMillisAndReset();
+		
 		/*int[] a = qc.getRows(2, new String[] {"cher", "goddess"});
 		String[][] b = qc.getRows(a);
 		for (String[] c : b)
@@ -233,6 +239,7 @@ public class QC implements Serializable{
 		Scanner scanner = new Scanner(System.in);
 		scanner.next();
 		
+		scanner.close();
 		System.out.println("done");
 	}
 }

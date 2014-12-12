@@ -11,7 +11,7 @@ public class ByteBufferI {
 		return sb.toString();
 	}
 	
-	public static IByteBuffer getByteBuffer(byte[] byteArray) {
+	public static ByteBufferInterface getByteBuffer(byte[] byteArray) {
 		/*switch(byteArray.length){
 		case 1: return new ByteBuffer01(byteArray);
 		}*/
@@ -19,15 +19,15 @@ public class ByteBufferI {
 		l = "bytebuffers.ByteBuffer" + l;
 		ClassLoader classLoader = ByteBufferI.class.getClassLoader();
 		
-		Class<IByteBuffer> aClass = null;
+		Class<ByteBufferInterface> aClass = null;
 		try {
-			aClass = (Class<IByteBuffer>) classLoader.loadClass(l);
+			aClass = (Class<ByteBufferInterface>) classLoader.loadClass(l);
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
-		Constructor<IByteBuffer> constructor = null;
+		Constructor<ByteBufferInterface> constructor = null;
 		try {
 			constructor = aClass.getConstructor(byte[].class);
 		} catch (NoSuchMethodException | SecurityException e) {
@@ -35,7 +35,7 @@ public class ByteBufferI {
 			e.printStackTrace();
 		}
 		
-		IByteBuffer ibf = null;
+		ByteBufferInterface ibf = null;
 		try {
 			ibf = constructor.newInstance(byteArray);
 		} catch (InstantiationException | IllegalAccessException
@@ -51,7 +51,7 @@ public class ByteBufferI {
 		byte[] b2 = new byte[]{126,126};
 		byte[] b12 = new byte[]{127,127,127,127,127,127,127,127,127,127,127,127};
 		
-		IByteBuffer ibf = getByteBuffer(b2);
+		ByteBufferInterface ibf = getByteBuffer(b2);
 		byte[] b = ibf.getData();
 		for(int i = 0; i < b.length; i++)
 			System.out.print(b[i] + ", ");
