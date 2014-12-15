@@ -1,4 +1,6 @@
 import helpers.DataLoader;
+import helpers.IntArrayUtils;
+import helpers.JSONResultSet;
 import helpers.Stopwatch;
 
 import java.io.IOException;
@@ -24,8 +26,10 @@ public class QC implements Serializable{
     private int colsCount; 		     //number of columns
     
     private Column[] columns;
+    private String[] columnNames;
        
-    public QC(String[] cols, int numOfRows){   
+    public QC(String[] cols, int numOfRows){
+    	columnNames = cols;
     	colsCount = cols.length;
     	columns = new Column[colsCount];
     	
@@ -37,6 +41,7 @@ public class QC implements Serializable{
     }
     
     public QC(String[] cols, int numOfRows, int uniqueColumnIndex){   
+    	columnNames = cols;
     	colsCount = cols.length;
     	columns = new Column[colsCount];
     	
@@ -92,7 +97,6 @@ public class QC implements Serializable{
     	return row;
     }
     
-    //TODO should be overloaded to produce JSON,XML and streaming output
     //TODO should be cater for pagination
     public String[][] getRows(int[] rows){
     	String[][] rowSet = new String[rows.length][colsCount];    	
@@ -100,10 +104,28 @@ public class QC implements Serializable{
     		rowSet[i] = getRow(rows[i]);
     	}
     	return rowSet;
-    } 
+    }
     
-    //TODO extract keywords from the key (splitting by space maybe) and perform an "AND" search (i.e. search for "brown boot" and "boot brown" should return the same result sets)
-    //TODO Just a note that the above will require a keyContains getRows method to be implemented by the col
+    public String getJSONRows(int[] rows){
+    	String[][] rowSet = new String[rows.length][colsCount];    	
+    	for(int i = 0; i < rows.length; i++) {
+    		rowSet[i] = getRow(rows[i]);
+    	}
+    	
+		JSONResultSet j = new JSONResultSet(this.columnNames);		
+    	return j.generate(rowSet);
+    }
+    
+    //TODO getXMLRows
+    public String getXMLRows(int[] rows){
+    	throw new UnsupportedOperationException("Not implemented yet!");
+    }
+    
+    //TODO getStreamRows
+    public String getStreamRows(int[] rows){
+    	throw new UnsupportedOperationException("Not implemented yet!");
+    }    
+    
     public int[] getRowNumbers(int columnIndex, String key){    	
     	int[] a = columns[columnIndex].col.getRows(key);
     	return a;
@@ -114,63 +136,33 @@ public class QC implements Serializable{
     	return a;
     }        
     
-    //TODO ensure the best algo will be impled
-    public int[] and(int[] rowNumbers1, int[] rowNumbers2){
-    	if ( (rowNumbers1 == null || rowNumbers1.length == 0) || (rowNumbers2 == null || rowNumbers2.length == 0) )
-    		return new int[0];
-    	
-    	int[] tResult = new int[Math.max(rowNumbers1.length, rowNumbers2.length)];
-    	int i = 0;
-    	int j = 0;
-    	int k = 0;
-    	
-    	while (i < rowNumbers1.length && j < rowNumbers2.length) {
-	    	while (i < rowNumbers1.length && rowNumbers1[i] < rowNumbers2[j])	i++;
-	    	
-	    	while (j < rowNumbers2.length && i < rowNumbers1.length && rowNumbers1[i] > rowNumbers2[j])	j++;
-	    	
-	    	while (i < rowNumbers1.length && j < rowNumbers2.length && rowNumbers1[i] == rowNumbers2[j]){
-	    		tResult[k] = rowNumbers1[i]; 
-	    		i++;
-	    		j++;
-	    		k++;
-	    	}
-    	}
-    	
-    	int[] result = new int[k];
-    	for (int h = 0; h < k; h++)
-    		result[h] = tResult[h];
-    	
-    	return result;
+    public int[] getRowNumbersContaining(int columnIndex, String key){  
+    	return columns[columnIndex].col.getRowsContaining(key);
     }
     
-  //TODO ensure the best algo will be impled
-    public int[] or(int[] rowNumbers1, int[] rowNumbers2){
-    	if ( (rowNumbers1 == null || rowNumbers1.length == 0) && (rowNumbers2 != null && rowNumbers2.length > 0) )
-    		return rowNumbers2;
-    	if ( (rowNumbers2 == null || rowNumbers2.length == 0) && (rowNumbers1 != null && rowNumbers1.length > 0) )
-    		return rowNumbers1;
-    	
-    	int[] result = new int[rowNumbers1.length + rowNumbers2.length];
-    	
-    	int i = 0;
-    	int j = 0;
-    	int k = 0;    	
-    	
-    	while(k < result.length) {
-	    	while(i < rowNumbers1.length && (j == rowNumbers2.length || rowNumbers1[i]<rowNumbers2[j])){
-	    		result[k] = rowNumbers1[i];
-	    		i++;
-	    		k++;
-	    	}
-	    	while(j < rowNumbers2.length && (i == rowNumbers1.length || rowNumbers1[i]>rowNumbers2[j])){
-	    		result[k] = rowNumbers2[j];
-	    		j++;
-	    		k++;
-	    	}	    	
-    	}
-    	    	
+    public int[] getRowNumbersContainingKeys(int columnIndex, String key){  
+    	String[] keys = key.split(" ");
+    	int[][] allRows = new int[keys.length][]; 
+    	for(int i = 0; i < keys.length; i++) 
+    		allRows[i] = columns[columnIndex].col.getRowsContaining(keys[i]);
+    	int[] result = allRows[0];
+    	for(int i = 1; i < allRows.length; i++)
+    		result = and(result,allRows[i]);    	
     	return result;
+    }            
+    
+    public int[] getRowNumbersContainingPattern(int columnIndex, String regex){  
+    	return columns[columnIndex].col.getRowsContainingPattern(regex);
+    }            
+    
+    //TODO ensure the best algo will be impled
+    public int[] and(int[] rowNumbers1, int[] rowNumbers2){
+    	return IntArrayUtils.intersection(rowNumbers1, rowNumbers2);
+    }
+    
+    //TODO ensure the best algo will be impled
+    public int[] or(int[] rowNumbers1, int[] rowNumbers2){
+    	return IntArrayUtils.union(rowNumbers1, rowNumbers2);
     }
     
     public static void main(String[] args) throws IOException, ClassNotFoundException, SQLException {
@@ -201,10 +193,14 @@ public class QC implements Serializable{
 		catch(Exception e) {
 			e.printStackTrace();
 		}
-	
+		
 		System.out.println(rowCount + " keys inserted");
 		stopwatch.printElapsedtimeAndReset();
-					
+		
+		//***********************************************************************
+		int[] a, a1;
+		String[][] b;
+
 		System.out.println(Arrays.deepToString(qc.getRow(65348)));		
 		stopwatch.printElapsedtimeInMillisAndReset();
 
@@ -214,26 +210,37 @@ public class QC implements Serializable{
 		System.out.println(Arrays.deepToString(qc.getRow(250)));		
 		stopwatch.printElapsedtimeInMillisAndReset();
 		
-		/*int[] a = qc.getRows(2, new String[] {"cher", "goddess"});
-		String[][] b = qc.getRows(a);
+		/*a = qc.getRows(2, new String[] {"cher", "goddess"});
+		b = qc.getRows(a);
 		for (String[] c : b)
 			System.out.println(Arrays.deepToString(c));
 		stopwatch.printElapsedtimeInMillisAndReset();*/
 		
-		/*int[] a = qc.getRows(13, new String[] {"jaspper bedlinen", "lorne bedlinen"});
-		int[] a1 = qc.getRows(6, "heritage");
-		int[] a2 = qc.or(a,a1);		*/
+		/*a = qc.getRows(13, new String[] {"jaspper bedlinen", "lorne bedlinen"});
+		a1 = qc.getRows(6, "heritage");
+		a2 = qc.or(a,a1);		*/
 		
-		int[] a = qc.getRowNumbers(6, "heritage");
-		int[] a1 = qc.getRowNumbers(2, "500");
+		a = qc.getRowNumbers(6, "heritage");
+		a1 = qc.getRowNumbers(2, "500");
 		a = qc.and(a,a1);
 		a1 = qc.getRowNumbers(4, "13");
 		a = qc.and(a,a1);
-		String[][] b = qc.getRows(a);
+		b = qc.getRows(a);
 		int h = 0;
 		System.out.println(b.length + " rows found");
 		for (String[] c : b)
 			System.out.println(++h + ") " + Arrays.deepToString(c));
+		stopwatch.printElapsedtimeInMillisAndReset();
+		
+		a = qc.getRowNumbersContainingKeys(13, "brown boot");
+		b = qc.getRows(a);
+		System.out.println(b.length + " rows found");
+		h = 0;
+		for (String[] c : b)
+			System.out.println(++h + ") " + Arrays.deepToString(c));
+		stopwatch.printElapsedtimeInMillisAndReset();		
+
+		System.out.println(qc.getJSONRows(a));
 		stopwatch.printElapsedtimeInMillisAndReset();
 		
 		Scanner scanner = new Scanner(System.in);

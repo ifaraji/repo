@@ -1,6 +1,7 @@
 import helpers.ByteUtils;
 import helpers.CharArrayUtil;
 import helpers.DataLoader;
+import helpers.IntArrayUtils;
 import helpers.Stopwatch;
 
 import java.io.File;
@@ -19,7 +20,6 @@ import bytebuffers.AbstractByteBuffer;
 import bytebuffers.ByteBufferI;
 import bytebuffers.ByteBufferInterface;
 
-//TODO first row occurrence (to improve performance by first index(rows array) lookup)
 public class IdeenTrieC implements Serializable{
 	
 	private static final long serialVersionUID = 1L;
@@ -55,49 +55,7 @@ public class IdeenTrieC implements Serializable{
 				ROWS = new int[numOfRows + 1];
 			else
 				ROWS = new int[NO_OF_ROWS];
-		}
-		
-		buildDefaultNumberITree();
-	}
-	
-	/**
-	 * longest common prefix
-	 * linear(worst case) / usually sub-linear (because we don't always have to iterate all chars)
-	 * @param str1 String input string 1 
-	 * @param str2 String input string 2 
-	 * @return the longest common prefix of the two input strings
-	 */
-	private int lcp(char[] str1, char[] str2) 
-	{
-		int N = Math.min(str1.length, str2.length);
-		for (int i = 0; i < N; i++)
-			if (str1[i] != str2[i])
-				return i;
-		return N;
-	}  
-	
-	private boolean bigger(char[] str1, char[] str2) {
-		int i = 0;
-		int N = Math.max(str1.length, str2.length);
-		while(str1[i] == str2[i] && i < N) 
-			i++;
-		
-		if (i == N)
-			return str1.length > str2.length;  
-
-		return str1[i] > str2[i];
-	}
-
-	private boolean smaller(char[] str1, char[] str2) {
-		int i = 0;
-		int N = Math.max(str1.length, str2.length);
-		while(str1[i] == str2[i] && i < N) 
-			i++;
-		
-		if (i == N)
-			return str1.length < str2.length;  
-		
-		return str1[i] < str2[i];
+		}		
 	}
 
 	private Node insertR(Node node, String key, int value) {
@@ -110,7 +68,7 @@ public class IdeenTrieC implements Serializable{
 			return node;
 		}
 		
-		int longestCommonPrefix = lcp(node.key, key.toCharArray());
+		int longestCommonPrefix = CharArrayUtil.lcp(node.key, key.toCharArray());
 		
 		if (longestCommonPrefix > 0 && longestCommonPrefix == node.key.length && longestCommonPrefix == key.length()){ //exact match
 			if (node.stIdx == 0)
@@ -122,36 +80,13 @@ public class IdeenTrieC implements Serializable{
 			node.middle = insertR(node.middle, key.substring(longestCommonPrefix), value);
 		else if (longestCommonPrefix > 0)
 			node = split(node, longestCommonPrefix, key, value);
-		else if (smaller(key.toCharArray(), node.key))
+		else if (CharArrayUtil.smaller(key.toCharArray(), node.key))
 			node.left = insertR(node.left, key, value);
-		else if (bigger(key.toCharArray(), node.key))
+		else if (CharArrayUtil.bigger(key.toCharArray(), node.key))
 			node.right = insertR(node.right, key, value);
 		return node;
 	}
 
-	@SuppressWarnings("unused")
-	private Node insertRDefaultTree(Node node, String key, int value) {
-		if (node == null) {
-			node = new Node();
-			node.key = key.toCharArray();
-			return node;
-		}
-		
-		int longestCommonPrefix = lcp(node.key, key.toCharArray());
-		
-		if (longestCommonPrefix > 0 && longestCommonPrefix == node.key.length && longestCommonPrefix == key.length()){ //exact match
-		}
-		else if (longestCommonPrefix > 0 && longestCommonPrefix == node.key.length)
-			node.middle = insertR(node.middle, key.substring(longestCommonPrefix), value);
-		else if (longestCommonPrefix > 0)
-			node = splitDefaultTree(node, longestCommonPrefix, key, value);
-		else if (smaller(key.toCharArray(), node.key))
-			node.left = insertR(node.left, key, value);
-		else if (bigger(key.toCharArray(), node.key))
-			node.right = insertR(node.right, key, value);
-		return node;
-	}
-	
 	private Node split(Node node, int longestCommonPrefix, String key, int value) {
 		char[] remainingNodeKey = CharArrayUtil.substring(node.key, longestCommonPrefix);
 		String remainingKey = key.substring(longestCommonPrefix);
@@ -176,7 +111,7 @@ public class IdeenTrieC implements Serializable{
 			nRK.stIdx = ++N;
 			nRK.O++;
 
-			if (smaller(nRK.key, nRNK.key)) 
+			if (CharArrayUtil.smaller(nRK.key, nRNK.key)) 
 				nRNK.left = nRK;
 			else
 				nRNK.right = nRK;
@@ -190,47 +125,6 @@ public class IdeenTrieC implements Serializable{
 		return node;
 	}	
 
-	private Node splitDefaultTree(Node node, int longestCommonPrefix, String key, int value) {
-		char[] remainingNodeKey = CharArrayUtil.substring(node.key, longestCommonPrefix);
-		String remainingKey = key.substring(longestCommonPrefix);
-		char[] theLongestCommonPrefix = CharArrayUtil.substring(node.key, 0, longestCommonPrefix);
-		
-		node.key = theLongestCommonPrefix;
-				
-		Node nRNK = new Node();
-		nRNK.key = remainingNodeKey;
-		nRNK.middle = node.middle;
-
-		node.middle = nRNK;
-		
-		Node nRK = null;
-		if (remainingKey.length() > 0) {
-			nRK = new Node();
-			nRK.key = remainingKey.toCharArray();
-
-			if (smaller(nRK.key, nRNK.key)) 
-				nRNK.left = nRK;
-			else
-				nRNK.right = nRK;
-		}
-		else {
-		}
-		
-		return node;
-	}	
-	
-	private void buildDefaultNumberITree() {
-		/*root = insertRDefaultTree(root, "5", 0);
-		root = insertRDefaultTree(root, "3", 0);
-		root = insertRDefaultTree(root, "7", 0);
-		root = insertRDefaultTree(root, "2", 0);
-		root = insertRDefaultTree(root, "4", 0);
-		root = insertRDefaultTree(root, "6", 0);
-		root = insertRDefaultTree(root, "8", 0);
-		root = insertRDefaultTree(root, "1", 0);
-		root = insertRDefaultTree(root, "9", 0);*/
-	}
-	
 	private void buildST(Node node, String path){
 		if (node == null) return;
 		
@@ -287,7 +181,7 @@ public class IdeenTrieC implements Serializable{
 	private Node find(Node node, String key) {
 		if (node == null) return null;
 		
-		int longestCommonPrefix = lcp(node.key, key.toCharArray());
+		int longestCommonPrefix = CharArrayUtil.lcp(node.key, key.toCharArray());
 		
 		if (longestCommonPrefix > 0 && longestCommonPrefix == node.key.length && longestCommonPrefix == key.length()) //exact match
 			return node;
@@ -298,10 +192,10 @@ public class IdeenTrieC implements Serializable{
 		else if (longestCommonPrefix > 0 && longestCommonPrefix == node.key.length)
 			return find(node.middle, key.substring(longestCommonPrefix));
 
-		else if (smaller(key.toCharArray(), node.key))
+		else if (CharArrayUtil.smaller(key.toCharArray(), node.key))
 			return find(node.left, key);
 
-		else if (bigger(key.toCharArray(), node.key))
+		else if (CharArrayUtil.bigger(key.toCharArray(), node.key))
 			return find(node.right, key);
 		
 		return null;
@@ -322,7 +216,7 @@ public class IdeenTrieC implements Serializable{
     private Node findFirstLevelNode(Node node, String key) {
         if (node == null) return null;
 
-        int longestCommonPrefix = lcp(node.key, key.toCharArray());
+        int longestCommonPrefix = CharArrayUtil.lcp(node.key, key.toCharArray());
        
         if (longestCommonPrefix > 0 && longestCommonPrefix == node.key.length && longestCommonPrefix == key.length()) //exact match
                return node;
@@ -334,7 +228,7 @@ public class IdeenTrieC implements Serializable{
                return findFirstLevelNode(node.middle, key.substring(longestCommonPrefix)) != null ? node : null;
         		  //return findFirstLevelNode(node.middle, key.substring(longestCommonPrefix));	
         			
-        if (smaller(key.toCharArray(), node.key))
+        if (CharArrayUtil.smaller(key.toCharArray(), node.key))
                return findFirstLevelNode(node.left, key);
         else
                return findFirstLevelNode(node.right, key);
@@ -345,7 +239,7 @@ public class IdeenTrieC implements Serializable{
 		
 		collectStartWith(node.left, prefix, masterPrefix, keys);
 		String nodeRealValue = prefix + new String(node.key);
-		if (node.stIdx > 0 && lcp(nodeRealValue.toCharArray(),masterPrefix.toCharArray()) == masterPrefix.length() )
+		if (node.stIdx > 0 && CharArrayUtil.lcp(nodeRealValue.toCharArray(),masterPrefix.toCharArray()) == masterPrefix.length() )
 			keys.add(nodeRealValue);
 		collectStartWith(node.middle, nodeRealValue, masterPrefix, keys);
 		
@@ -367,13 +261,20 @@ public class IdeenTrieC implements Serializable{
 	private int[] collectContains(Node node, String prefix, String containsStr) {
 		if (node == null) return null;
 		
-		collectContains(node.left, prefix, containsStr);
+		int[] left = collectContains(node.left, prefix, containsStr);
 		String nodeRealValue = prefix + new String(node.key);
+		int[] self = null;
 		if (node.stIdx > 0 && nodeRealValue.contains(containsStr))
-			((AbstractByteBuffer)ST[node.stIdx]).getRows();
-		collectContains(node.middle, nodeRealValue, containsStr);
+			self = ((AbstractByteBuffer)ST[node.stIdx]).getRows();
+		int[] middle = collectContains(node.middle, nodeRealValue, containsStr);
 		
-		collectContains(node.right, prefix, containsStr);
+		int[] right = collectContains(node.right, prefix, containsStr);
+		
+		self = IntArrayUtils.merge(self, left);
+		self = IntArrayUtils.merge(self, middle);
+		self = IntArrayUtils.merge(self, right);
+		
+		return self;
 	}
 
 	public void insert(String key, int value) {
@@ -454,10 +355,13 @@ public class IdeenTrieC implements Serializable{
 		return rows;
 	}
 		
-	//TODO 
-	public int[] getRowsContaining(String key){
-		
-		return null;
+	public int[] getRowsContaining(String key){		
+		return collectContains(root, "", key);
+	}
+	
+	//TODO getRowsContainingPattern
+	public int[] getRowsContainingPattern(String regex){		
+		throw new UnsupportedOperationException("not implemented yet");
 	}
 	
 	public Iterable<String> keys()
@@ -471,7 +375,7 @@ public class IdeenTrieC implements Serializable{
     {
            ArrayList<String> keys = new ArrayList<String>();
            Node node = findFirstLevelNode(root, prefix);
-           if (node != null && lcp(node.key, prefix.toCharArray()) == prefix.length() && node.stIdx > 0)
+           if (node != null && CharArrayUtil.lcp(node.key, prefix.toCharArray()) == prefix.length() && node.stIdx > 0)
         	   keys.add(new String(node.key));
            if (node != null)
         	   collectStartWith(node.middle, String.valueOf(node.key), prefix, keys);
