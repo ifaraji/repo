@@ -1,5 +1,5 @@
 package helpers;
-
+//TODO Some of the methods need to be made more generic
 public class ByteUtils {
 	@SuppressWarnings("unused")
 	private static String byteArrayToString(byte[] ba) {
