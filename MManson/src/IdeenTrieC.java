@@ -20,42 +20,43 @@ import bytebuffers.AbstractByteBuffer;
 import bytebuffers.ByteBufferI;
 import bytebuffers.ByteBufferInterface;
 
-public class IdeenTrieC implements Serializable{
-	
+public class IdeenTrieC implements Serializable {
+
 	private static final long serialVersionUID = 1L;
-	//private final int NO_OF_DISTINCT_KEYS = 100;
-	private final int NO_OF_ROWS = 1000000;	
-	
-	private class Node implements Serializable{
+	// private final int NO_OF_DISTINCT_KEYS = 100;
+	private final int NO_OF_ROWS = 1000000;
+
+	private class Node implements Serializable {
 		private static final long serialVersionUID = 1L;
-		private char[] key; //string memory : 40+2N bytes ==> should use char array (lose string convenience tho)		
+		private char[] key; // string memory : 40+2N bytes ==> should use char
+							// array (lose string convenience tho)
 		private Node left;
 		private Node right;
 		private Node middle;
 		private int stIdx;
 		private int O;
-	}	
-	
+	}
+
 	private Node root;
 	private boolean UK;
-	
+
 	private int letterCase = 0;
-	private int N = 0; //num of distinct values
-	
+	private int N = 0; // num of distinct values
+
 	private ByteBufferInterface[] ST;
-	//private byte[][] ST;
+	// private byte[][] ST;
 	private int[] ROWS;
-		
-	public IdeenTrieC(int numOfRows, boolean unique) {		
+
+	public IdeenTrieC(int numOfRows, boolean unique) {
 		this.UK = unique;
-		this.letterCase = 1; 		
-				
+		this.letterCase = 1;
+
 		if (!UK) {
-			if (numOfRows > 0) 
+			if (numOfRows > 0)
 				ROWS = new int[numOfRows + 1];
 			else
 				ROWS = new int[NO_OF_ROWS];
-		}		
+		}
 	}
 
 	private Node insertR(Node node, String key, int value) {
@@ -64,20 +65,25 @@ public class IdeenTrieC implements Serializable{
 			node.key = key.toCharArray();
 			node.stIdx = ++N;
 			node.O++;
-			if (!UK) ROWS[value] = node.stIdx;
+			if (!UK)
+				ROWS[value] = node.stIdx;
 			return node;
 		}
-		
-		int longestCommonPrefix = CharArrayUtils.lcp(node.key, key.toCharArray());
-		
-		if (longestCommonPrefix > 0 && longestCommonPrefix == node.key.length && longestCommonPrefix == key.length()){ //exact match
+
+		int longestCommonPrefix = CharArrayUtils.lcp(node.key,
+				key.toCharArray());
+
+		if (longestCommonPrefix > 0 && longestCommonPrefix == node.key.length
+				&& longestCommonPrefix == key.length()) { // exact match
 			if (node.stIdx == 0)
 				node.stIdx = ++N;
 			node.O++;
-			if (!UK) ROWS[value] = node.stIdx;
-		}
-		else if (longestCommonPrefix > 0 && longestCommonPrefix == node.key.length)
-			node.middle = insertR(node.middle, key.substring(longestCommonPrefix), value);
+			if (!UK)
+				ROWS[value] = node.stIdx;
+		} else if (longestCommonPrefix > 0
+				&& longestCommonPrefix == node.key.length)
+			node.middle = insertR(node.middle,
+					key.substring(longestCommonPrefix), value);
 		else if (longestCommonPrefix > 0)
 			node = split(node, longestCommonPrefix, key, value);
 		else if (CharArrayUtils.smaller(key.toCharArray(), node.key))
@@ -88,12 +94,14 @@ public class IdeenTrieC implements Serializable{
 	}
 
 	private Node split(Node node, int longestCommonPrefix, String key, int value) {
-		char[] remainingNodeKey = CharArrayUtils.substring(node.key, longestCommonPrefix);
+		char[] remainingNodeKey = CharArrayUtils.substring(node.key,
+				longestCommonPrefix);
 		String remainingKey = key.substring(longestCommonPrefix);
-		char[] theLongestCommonPrefix = CharArrayUtils.substring(node.key, 0, longestCommonPrefix);
-		
+		char[] theLongestCommonPrefix = CharArrayUtils.substring(node.key, 0,
+				longestCommonPrefix);
+
 		node.key = theLongestCommonPrefix;
-				
+
 		Node nRNK = new Node();
 		nRNK.key = remainingNodeKey;
 		nRNK.middle = node.middle;
@@ -103,7 +111,7 @@ public class IdeenTrieC implements Serializable{
 		node.stIdx = 0;
 		node.O = 0;
 		node.middle = nRNK;
-		
+
 		Node nRK = null;
 		if (remainingKey.length() > 0) {
 			nRK = new Node();
@@ -111,85 +119,104 @@ public class IdeenTrieC implements Serializable{
 			nRK.stIdx = ++N;
 			nRK.O++;
 
-			if (CharArrayUtils.smaller(nRK.key, nRNK.key)) 
+			if (CharArrayUtils.smaller(nRK.key, nRNK.key))
 				nRNK.left = nRK;
 			else
 				nRNK.right = nRK;
-		}
-		else {
+		} else {
 			node.stIdx = ++N;
 			node.O++;
 		}
-		if (!UK) ROWS[value] = N;
-		
-		return node;
-	}	
+		if (!UK)
+			ROWS[value] = N;
 
-	private void buildST(Node node, String path){
-		if (node == null) return;
-		
+		return node;
+	}
+
+	private void buildST(Node node, String path) {
+		if (node == null)
+			return;
+
 		buildST(node.left, path + "L");
-			
+
 		if (node.stIdx > 0) {
-			ST[node.stIdx] = ByteBufferI.getByteBuffer( ByteUtils.pathToByteArray(path) );
-			((AbstractByteBuffer)ST[node.stIdx]).createRows(node.O);
+			ST[node.stIdx] = ByteBufferI.getByteBuffer(ByteUtils
+					.pathToByteArray(path));
+			((AbstractByteBuffer) ST[node.stIdx]).createRows(node.O);
 		}
-		
+
 		buildST(node.middle, path + "M");
-		
+
 		buildST(node.right, path + "R");
 	}
-	
-	private void buildST2(){
+
+	private void buildST2() {
 		if (!UK)
-			for (int i = 1; i < ROWS.length; i++) 
-				((AbstractByteBuffer)ST[ROWS[i]]).addRow(i);
+			for (int i = 1; i < ROWS.length; i++)
+				((AbstractByteBuffer) ST[ROWS[i]]).addRow(i);
 		else
 			for (int i = 1; i < ST.length; i++)
-				((AbstractByteBuffer)ST[i]).addRow(i);
+				((AbstractByteBuffer) ST[i]).addRow(i);
 	}
-	
-	private String resolveSTValue(byte[] input) {	
+
+	private String resolveSTValue(byte[] input) {
 		String path = ByteUtils.byteArrayToPath(input);
 		return resolveSTValue(root, path, 0);
 	}
-	
+
 	private String resolveSTValue(Node node, String path, int step) {
-		if (node == null) return "";
-		
+		if (node == null)
+			return "";
+
 		StringBuilder sb = new StringBuilder();
 		if (step == path.length()) {
 			sb.append(node.key);
-		}
-		else if (path.charAt(step) == 'L') {
+		} else if (path.charAt(step) == 'L') {
 			String s = resolveSTValue(node.left, path, ++step);
 			sb.append(s);
-		}
-		else if (path.charAt(step) == 'M') {
+		} else if (path.charAt(step) == 'M') {
 			sb.append(node.key);
 			String s = resolveSTValue(node.middle, path, ++step);
 			sb.append(s);
-		}
-		else if (path.charAt(step) == 'R') {
+		} else if (path.charAt(step) == 'R') {
 			String s = resolveSTValue(node.right, path, ++step);
 			sb.append(s);
 		}
 
 		return sb.toString();
 	}
-	
-	private Node find(Node node, String key) {
-		if (node == null) return null;
-		
-		int longestCommonPrefix = CharArrayUtils.lcp(node.key, key.toCharArray());
-		
-		if (longestCommonPrefix > 0 && longestCommonPrefix == node.key.length && longestCommonPrefix == key.length()) //exact match
-			return node;
 
-		else if (longestCommonPrefix > 0 && longestCommonPrefix == key.length())
+	private Node find(Node node, String key) {
+		if (node == null)
 			return null;
 
-		else if (longestCommonPrefix > 0 && longestCommonPrefix == node.key.length)
+		int longestCommonPrefix = CharArrayUtils.lcp(node.key,
+				key.toCharArray());
+
+		if (longestCommonPrefix > 0 && longestCommonPrefix < node.key.length
+				&& longestCommonPrefix < key.length()) // key does not exist. if
+														// it did, this node
+														// would be splitted
+			return null;
+
+		if (longestCommonPrefix > 0 && longestCommonPrefix == node.key.length
+				&& longestCommonPrefix == key.length()) // exact match
+			return node;
+
+		else if (longestCommonPrefix > 0 && longestCommonPrefix == key.length()) // key
+																					// is
+																					// part
+																					// of
+																					// the
+																					// current
+																					// node
+			return null;
+
+		else if (longestCommonPrefix > 0
+				&& longestCommonPrefix == node.key.length) // if exists at all,
+															// the key will be
+															// somewhere down
+															// here
 			return find(node.middle, key.substring(longestCommonPrefix));
 
 		else if (CharArrayUtils.smaller(key.toCharArray(), node.key))
@@ -197,111 +224,119 @@ public class IdeenTrieC implements Serializable{
 
 		else if (CharArrayUtils.bigger(key.toCharArray(), node.key))
 			return find(node.right, key);
-		
+
 		return null;
 	}
-	
+
 	private void collect(Node node, String prefix, ArrayList<String> keys) {
-		if (node == null) return;
-		
+		if (node == null)
+			return;
+
 		collect(node.left, prefix, keys);
-		
-		if (node.stIdx > 0) 
+
+		if (node.stIdx > 0)
 			keys.add(prefix + new String(node.key));
 		collect(node.middle, prefix + new String(node.key), keys);
-		
+
 		collect(node.right, prefix, keys);
 	}
-	
-    private Node findFirstLevelNode(Node node, String key) {
-        if (node == null) return null;
 
-        int longestCommonPrefix = CharArrayUtils.lcp(node.key, key.toCharArray());
-       
-        if (longestCommonPrefix > 0 && longestCommonPrefix == node.key.length && longestCommonPrefix == key.length()) //exact match
-               return node;
-       
-        if (longestCommonPrefix > 0 && longestCommonPrefix == key.length() && key.length() < node.key.length) //key is part of this node
-               return node;
+	private Node findStartWith(Node node, String key,
+			ArrayList<String> nodeValue) {
+		if (node == null)
+			return null;
 
-        if (longestCommonPrefix > 0 && longestCommonPrefix == node.key.length && key.length() > node.key.length)
-               return findFirstLevelNode(node.middle, key.substring(longestCommonPrefix)) != null ? node : null;
-        		  //return findFirstLevelNode(node.middle, key.substring(longestCommonPrefix));	
-        			
-        if (CharArrayUtils.smaller(key.toCharArray(), node.key))
-               return findFirstLevelNode(node.left, key);
-        else
-               return findFirstLevelNode(node.right, key);
- }
- 
-	private void collectStartWith(Node node, String prefix, String masterPrefix, ArrayList<String> keys) {
-		if (node == null) return;
-		
-		collectStartWith(node.left, prefix, masterPrefix, keys);
-		String nodeRealValue = prefix + new String(node.key);
-		if (node.stIdx > 0 && CharArrayUtils.lcp(nodeRealValue.toCharArray(),masterPrefix.toCharArray()) == masterPrefix.length() )
-			keys.add(nodeRealValue);
-		collectStartWith(node.middle, nodeRealValue, masterPrefix, keys);
-		
-		collectStartWith(node.right, prefix, masterPrefix, keys);
+		int longestCommonPrefix = CharArrayUtils.lcp(node.key,
+				key.toCharArray());
+
+		if (longestCommonPrefix > 0 && longestCommonPrefix < node.key.length
+				&& longestCommonPrefix < key.length()) // key does not exist. if it did, this node would be splitted
+			return null;
+
+		if (longestCommonPrefix > 0 && longestCommonPrefix == node.key.length
+				&& longestCommonPrefix == key.length()) { // exact match
+			nodeValue.add(new String(node.key));
+			return node;
+		}
+
+		if (longestCommonPrefix > 0 && longestCommonPrefix == key.length()
+				&& key.length() < node.key.length) { // key is part of this node
+			nodeValue.add(new String(node.key));
+			return node;
+		}
+
+		if (longestCommonPrefix > 0 && longestCommonPrefix == node.key.length
+				&& key.length() > node.key.length) { // if at all, key is somewhere down here
+			nodeValue.add(new String(node.key));
+			return findStartWith(node.middle, key.substring(longestCommonPrefix), nodeValue);
+		}
+
+		if (CharArrayUtils.smaller(key.toCharArray(), node.key))
+			return findStartWith(node.left, key, nodeValue);
+		else
+			return findStartWith(node.right, key, nodeValue);
 	}
-	
-	private void collectContains(Node node, String prefix, String containsStr, ArrayList<String> keys) {
-		if (node == null) return;
-		
+
+	private void collectContains(Node node, String prefix, String containsStr,
+			ArrayList<String> keys) {
+		if (node == null)
+			return;
+
 		collectContains(node.left, prefix, containsStr, keys);
 		String nodeRealValue = prefix + new String(node.key);
 		if (node.stIdx > 0 && nodeRealValue.contains(containsStr))
 			keys.add(nodeRealValue);
 		collectContains(node.middle, nodeRealValue, containsStr, keys);
-		
+
 		collectContains(node.right, prefix, containsStr, keys);
 	}
-	
+
 	private int[] collectContains(Node node, String prefix, String containsStr) {
-		if (node == null) return null;
-		
+		if (node == null)
+			return null;
+
 		int[] left = collectContains(node.left, prefix, containsStr);
 		String nodeRealValue = prefix + new String(node.key);
 		int[] self = null;
 		if (node.stIdx > 0 && nodeRealValue.contains(containsStr))
-			self = ((AbstractByteBuffer)ST[node.stIdx]).getRows();
+			self = ((AbstractByteBuffer) ST[node.stIdx]).getRows();
 		int[] middle = collectContains(node.middle, nodeRealValue, containsStr);
-		
+
 		int[] right = collectContains(node.right, prefix, containsStr);
-		
+
 		self = IntArrayUtils.merge(self, left);
 		self = IntArrayUtils.merge(self, middle);
 		self = IntArrayUtils.merge(self, right);
-		
+
 		return self;
 	}
 
 	public void insert(String key, int value) {
-		if (key == null || key.trim().length() == 0) key = "null";
+		if (key == null || key.trim().length() == 0)
+			key = "null";
 
 		key = (letterCase == 1) ? key.toLowerCase() : key;
-		
+
 		key = key.trim();
-		
+
 		root = insertR(root, key, value);
-		
+
 	}
-	
+
 	public void finalize() {
-		ST = new ByteBufferInterface[N+1];
-		//ST = new byte[N+1][];
+		ST = new ByteBufferInterface[N + 1];
+		// ST = new byte[N+1][];
 		buildST(root, "");
 		buildST2();
 	}
-	
+
 	public String getRowValue(int index) {
 		if (UK)
 			return resolveSTValue(ST[index].getData());
 		else
-			return resolveSTValue(ST[ ROWS[index] ].getData());
+			return resolveSTValue(ST[ROWS[index]].getData());
 	}
-	
+
 	public String find(String key) {
 		Node node = find(root, key);
 		if (node != null && node.stIdx > 0)
@@ -309,115 +344,107 @@ public class IdeenTrieC implements Serializable{
 		else
 			return key + " - not found";
 	}
-	
+
 	public int[] getRows(String key) {
 		Node node = find(root, key);
 		if (node != null && node.stIdx > 0) {
-			/*if (UK) 
-				return new int[] {node.stIdx + 1};
-			StringBuilder val = new StringBuilder();
-			int i = 1;
-			while(ROWS[i] != node.stIdx)	
-				i++;
-			val.append(i);
-			for (int j = i+1; j < ROWS.length; j++)
-				if (ROWS[j] == node.stIdx) {
-					val.append(",");
-					val.append(j);
-				}
-			String[] auxStrArray = val.toString().split(",");
-			int[] rows = new int[auxStrArray.length];
-			for (i = 0; i < auxStrArray.length; i++)
-				rows[i] = Integer.parseInt(auxStrArray[i]);
-			return rows;*/
-			return ((AbstractByteBuffer)ST[node.stIdx]).getRows();
-		}
-		else
+			/*
+			 * if (UK) return new int[] {node.stIdx + 1}; StringBuilder val =
+			 * new StringBuilder(); int i = 1; while(ROWS[i] != node.stIdx) i++;
+			 * val.append(i); for (int j = i+1; j < ROWS.length; j++) if
+			 * (ROWS[j] == node.stIdx) { val.append(","); val.append(j); }
+			 * String[] auxStrArray = val.toString().split(","); int[] rows =
+			 * new int[auxStrArray.length]; for (i = 0; i < auxStrArray.length;
+			 * i++) rows[i] = Integer.parseInt(auxStrArray[i]); return rows;
+			 */
+			return ((AbstractByteBuffer) ST[node.stIdx]).getRows();
+		} else
 			return new int[0];
-	}	
-	
+	}
+
 	public int[] getRows(String[] keys) {
 		int[][] aux = new int[keys.length][];
 		int i = 0;
 		int N = 0;
-		for (String key : keys) { 
+		for (String key : keys) {
 			aux[i] = getRows(key);
 			N += aux[i].length;
 			i++;
 		}
-		
+
 		int[] rows = new int[N];
 		int rowsIndex = 0;
-		
+
 		for (int j = 0; j < i; j++)
 			for (int k = 0; k < aux[j].length; k++)
 				rows[rowsIndex++] = aux[j][k];
 		return rows;
 	}
-		
-	public int[] getRowsContaining(String key){		
+
+	public int[] getRowsContaining(String key) {
 		return collectContains(root, "", key);
 	}
-	
-	//TODO getRowsContainingPattern
-	public int[] getRowsContainingPattern(String regex){		
+
+	// TODO getRowsContainingPattern
+	public int[] getRowsContainingPattern(String regex) {
 		throw new UnsupportedOperationException("not implemented yet");
 	}
-	
-	public Iterable<String> keys()
-	{ 
+
+	public Iterable<String> keys() {
 		ArrayList<String> keys = new ArrayList<String>();
 		collect(root, "", keys);
 		return keys;
 	}
-	
-	public Iterable<String> keysStartWith(String prefix)
-    {
-           ArrayList<String> keys = new ArrayList<String>();
-           Node node = findFirstLevelNode(root, prefix);
-           if (node != null && CharArrayUtils.lcp(node.key, prefix.toCharArray()) == prefix.length() && node.stIdx > 0)
-        	   keys.add(new String(node.key));
-           if (node != null)
-        	   collectStartWith(node.middle, String.valueOf(node.key), prefix, keys);
-           return keys;
-    }
-		
-	public Iterable<String> keysContain(String containStr)
-    {
-           ArrayList<String> keys = new ArrayList<String>();
-           collectContains(root, "", containStr, keys);
-           return keys;
-    }	
-    
-	public static void main(String[] args) throws SQLException, IOException, ClassNotFoundException {
+
+	public Iterable<String> keysStartWith(String prefix) {
+		ArrayList<String> keys = new ArrayList<String>(); 
+		ArrayList<String> nodeValue = new ArrayList<String>();
+		Node node = findStartWith(root, prefix, nodeValue);
+		if (node != null) {
+			StringBuilder stringBuilder = new StringBuilder();
+			for (int i = 0; i < nodeValue.size(); i++)
+				stringBuilder.append(nodeValue.get(i));			
+			if (node.stIdx > 0)
+				keys.add(stringBuilder.toString());
+			collect(node.middle, stringBuilder.toString(), keys);
+		}
+		return keys;
+	}
+
+	public Iterable<String> keysContain(String containStr) {
+		ArrayList<String> keys = new ArrayList<String>();
+		collectContains(root, "", containStr, keys);
+		return keys;
+	}
+
+	public static void main(String[] args) throws SQLException, IOException,
+			ClassNotFoundException {
 		Stopwatch stopwatch = new Stopwatch();
 		IdeenTrieC it = null;
-				
+
 		File f = new File("..\\..\\ideenTrie.dat");
 		if (f.exists()) {
 			FileInputStream file = new FileInputStream("..\\..\\ideenTrie.dat");
-	        ObjectInputStream in = new ObjectInputStream(file);
-	        it = (IdeenTrieC) in.readObject();
-	        in.close();
-	        file.close();
-	        System.out.println("Deserialized...");
-		}
-		else {
-			DataLoader dl = DataLoader.getInstance("..\\..\\mmsil1.csv");	
+			ObjectInputStream in = new ObjectInputStream(file);
+			it = (IdeenTrieC) in.readObject();
+			in.close();
+			file.close();
+			System.out.println("Deserialized...");
+		} else {
+			DataLoader dl = DataLoader.getInstance("..\\..\\mmsil1.csv");
 			it = new IdeenTrieC(dl.numOfRows(), false);
 			int rowCount = 0;
 			try {
-				while(dl.next()){ 		
+				while (dl.next()) {
 					rowCount++;
 					String[] row = dl.getCurrentRow();
 					it.insert(row[0], rowCount);
 				}
-				it.finalize();				 
-			}
-			catch(Exception e) {
+				it.finalize();
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
-						
+
 			System.out.println(rowCount + " keys inserted");
 			stopwatch.printElapsedtimeAndReset();
 			FileOutputStream file = null;
@@ -428,45 +455,43 @@ public class IdeenTrieC implements Serializable{
 				out.writeObject(it);
 				System.out.println("Serialized...");
 				stopwatch.printElapsedtimeAndReset();
-			}
-			catch(OutOfMemoryError o) {
+			} catch (OutOfMemoryError o) {
 				System.out.println("Failed to serialize it data");
 				o.printStackTrace();
-				if (f.exists()) 
-					f.delete();				
-			}
-			finally {
+				if (f.exists())
+					f.delete();
+			} finally {
 				out.close();
-				file.close();				
+				file.close();
 			}
 		}
 
-		/*FileOutputStream file = null;
-		ObjectOutputStream out = null;
-		file = new FileOutputStream("..\\..\\ideenTrie.rows.dat");
-		out = new ObjectOutputStream(file);
-		out.writeObject(it.ROWS);
-		out.close();
-		file.close();
-		file = new FileOutputStream("..\\..\\ideenTrie.st.dat");
-		out = new ObjectOutputStream(file);
-		out.writeObject(it.ST);
-		out.close();
-		file.close();*/
-		
-		/*for (int h = 1; h <= 180; h++)
-		System.out.println(h + ": "+ it.getRowValue(h));
-		stopwatch.printElapsedtimeInMillisAndReset();*/
-		
+		/*
+		 * FileOutputStream file = null; ObjectOutputStream out = null; file =
+		 * new FileOutputStream("..\\..\\ideenTrie.rows.dat"); out = new
+		 * ObjectOutputStream(file); out.writeObject(it.ROWS); out.close();
+		 * file.close(); file = new
+		 * FileOutputStream("..\\..\\ideenTrie.st.dat"); out = new
+		 * ObjectOutputStream(file); out.writeObject(it.ST); out.close();
+		 * file.close();
+		 */
+
+		/*
+		 * for (int h = 1; h <= 180; h++) System.out.println(h + ": "+
+		 * it.getRowValue(h)); stopwatch.printElapsedtimeInMillisAndReset();
+		 */
+
 		Scanner scanner = new Scanner(System.in);
 		boolean b = true;
-		while(b) {
+		while (b) {
 			System.out.println("----------------------");
 			System.out.println("0-Exit");
 			System.out.println("1-List all keys");
 			System.out.println("2-Look for a key");
-			System.out.println("3-List all keys which begin with a specific prefix");
-			System.out.println("4-List all keys which contain a specific substring");
+			System.out
+					.println("3-List all keys which begin with a specific prefix");
+			System.out
+					.println("4-List all keys which contain a specific substring");
 			System.out.println("5-Get row value");
 			System.out.print("Choice:");
 			try {
@@ -475,16 +500,16 @@ public class IdeenTrieC implements Serializable{
 				case 0:
 					b = false;
 					break;
-				case 1:{
+				case 1: {
 					stopwatch.reset();
 					Iterable<String> keys = it.keys();
 					int i = 0;
-					for (String key : keys) 
+					for (String key : keys)
 						System.out.println(++i + "- " + key);
 					stopwatch.printElapsedtime();
 					break;
 				}
-				case 2:{
+				case 2: {
 					System.out.print("Key : ");
 					String key = scanner.next();
 					stopwatch.reset();
@@ -498,29 +523,29 @@ public class IdeenTrieC implements Serializable{
 					stopwatch.printElapsedtimeInMillisAndReset();
 					break;
 				}
-				case 3:{
+				case 3: {
 					int j = 0;
 					System.out.print("Prefix : ");
 					String prefix = scanner.next();
 					stopwatch.reset();
 					Iterable<String> prefixedKeys = it.keysStartWith(prefix);
-					for (String prefixedKey : prefixedKeys) 
+					for (String prefixedKey : prefixedKeys)
 						System.out.println(++j + "- " + prefixedKey);
-					stopwatch.printElapsedtime();					
+					stopwatch.printElapsedtime();
 					break;
 				}
-				case 4:{
+				case 4: {
 					int k = 0;
 					System.out.print("Contain Str : ");
 					String containStr = scanner.next();
 					stopwatch.reset();
 					Iterable<String> containedKeys = it.keysContain(containStr);
-					for (String containedKey : containedKeys) 
+					for (String containedKey : containedKeys)
 						System.out.println(++k + "- " + containedKey);
-					stopwatch.printElapsedtime();					
+					stopwatch.printElapsedtime();
 					break;
 				}
-				case 5:{
+				case 5: {
 					System.out.print("Row : ");
 					String key = scanner.next();
 					stopwatch.reset();
@@ -529,13 +554,12 @@ public class IdeenTrieC implements Serializable{
 					System.out.println("***********************");
 					stopwatch.printElapsedtimeInMillisAndReset();
 					break;
-				}				
+				}
 				default:
 					System.out.println("Invalid Choice");
 					break;
-				} 
-			}
-			catch(InputMismatchException e) {
+				}
+			} catch (InputMismatchException e) {
 				System.out.println("Invalid Choice");
 				scanner.next();
 			}

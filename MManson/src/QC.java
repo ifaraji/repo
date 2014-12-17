@@ -233,16 +233,23 @@ public class QC implements Serializable{
 		stopwatch.printElapsedtimeInMillisAndReset();
 		
 		a = qc.getRowNumbersContainingKeys(13, "brown boot");
-		b = qc.getRows(a);
-		System.out.println(b.length + " rows found");
+		System.out.println(a.length + " rows found");
+		/*b = qc.getRows(a);		
 		h = 0;
 		for (String[] c : b)
-			System.out.println(++h + ") " + Arrays.deepToString(c));
+			System.out.println(++h + ") " + Arrays.deepToString(c));*/
 		stopwatch.printElapsedtimeInMillisAndReset();		
 
-		System.out.println(qc.getJSONRows(a));
+		a = qc.getRowNumbersContainingKeys(13, "brown boot");
+		System.out.println(a.length + " rows found");
+		//System.out.println(qc.getJSONRows(a));
 		stopwatch.printElapsedtimeInMillisAndReset();
-		
+
+		a = qc.getRowNumbersContainingKeys(13, "brown boot");
+		System.out.println(a.length + " rows found");
+		//System.out.println(qc.getJSONRows(a));
+		stopwatch.printElapsedtimeInMillisAndReset();
+
 		Scanner scanner = new Scanner(System.in);
 		scanner.next();
 		

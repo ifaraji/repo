@@ -54,7 +54,6 @@ public class CharArrayUtils {
 		
 		return str1[i] < str2[i];
 	}
-
 	
 	public static void main(String[] args) {
 		String s = "abcdefghijk";
