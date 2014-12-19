@@ -141,14 +141,15 @@ public class QC implements Serializable{
     }
     
     public int[] getRowNumbersContainingKeys(int columnIndex, String key){  
-    	String[] keys = key.split(" ");
-    	int[][] allRows = new int[keys.length][]; 
-    	for(int i = 0; i < keys.length; i++) 
-    		allRows[i] = columns[columnIndex].col.getRowsContaining(keys[i]);
-    	int[] result = allRows[0];
-    	for(int i = 1; i < allRows.length; i++)
-    		result = and(result,allRows[i]);    	
-    	return result;
+    	//String[] keys = key.split(" ");
+    	//int[][] allRows = new int[keys.length][]; 
+    	//for(int i = 0; i < keys.length; i++) 
+    		//allRows[i] = columns[columnIndex].col.getRowsContaining(keys[i]);
+    	//int[] result = allRows[0];
+    	//for(int i = 1; i < allRows.length; i++)
+    		//result = and(result,allRows[i]);    	
+    	//return result;
+    	return columns[columnIndex].col.getRowsContaining(key, " ");
     }            
     
     public int[] getRowNumbersContainingPattern(int columnIndex, String regex){  
@@ -169,11 +170,13 @@ public class QC implements Serializable{
     	QC qc;
 		Stopwatch stopwatch = new Stopwatch();
 		
-		DataLoader dl = DataLoader.getInstance("..\\..\\mmsil1.csv");	
+		DataLoader dl = DataLoader.getInstance("..\\..\\mmsil2.csv");	
+		stopwatch.printElapsedtimeAndReset();
 		//qc = new QC(new String[]{"tpc", "category_code", "brand", "product_type", "colour", "size1"}, dl.numOfRows());
-		qc = new QC(new String[]{"ITEM", "TPC", "CATEGORY_CODE", "CLASS_GROUP", "CLASS", "SUBCLASS", "BRAND", "COLOUR_IND",
+		qc = new QC(new String[]{"ITEM","ITEM_PARENT","PRIMARY_EAN","ITEM_NAME","BRAND","PRODUCT_TYPE","COLOUR","COLOUR_CODE","SIZE1","SIZE1_CODE","SECONDARY_SIZE","SECONDARY_SIZE_CODE","DIMENSION","PRICE","HAZCHEM","SUPPLIER","SUPPLIER_COLOR","INNER_PACK_SIZE","EA_LENGTH","EA_WIDTH","EA_HEIGHT","EA_VOLUME","EA_WEIGHT","RETURNABLE_IND","INSTRUCTION_REQ_IND","RESTRICTED_AGE","ITEM_TYPE"}, dl.numOfRows(), 0);
+		/*qc = new QC(new String[]{"ITEM", "TPC", "CATEGORY_CODE", "CLASS_GROUP", "CLASS", "SUBCLASS", "BRAND", "COLOUR_IND",
 								"SIZE1_IND", "SIZE2_IND", "ONLINE_IND", "STATUS", "STATUS_DESC", "ITEM_NAME", "ITEM_SHORT_DESC",
-								"ITEM_LONG_DESC", "MIN_PRICE", "MAX_PRICE", "IMAGE_ADDR"}, dl.numOfRows(), 0);	
+								"ITEM_LONG_DESC", "MIN_PRICE", "MAX_PRICE", "IMAGE_ADDR"}, dl.numOfRows(), 0);	*/		
 		int rowCount = 0;
 		try {
 			while(dl.next()){ 		
@@ -185,7 +188,7 @@ public class QC implements Serializable{
 					}catch (ArrayIndexOutOfBoundsException e) {
 						qc.insert(i, "", rowCount);
 					}
-				if (rowCount % 10000 == 0)
+				if (rowCount % 100000 == 0)
 					System.out.println(rowCount + " rows inserted");
 			}
 			qc.finalize();
@@ -220,7 +223,7 @@ public class QC implements Serializable{
 		a1 = qc.getRows(6, "heritage");
 		a2 = qc.or(a,a1);		*/
 		
-		a = qc.getRowNumbers(6, "heritage");
+		/*a = qc.getRowNumbers(6, "heritage");
 		a1 = qc.getRowNumbers(2, "500");
 		a = qc.and(a,a1);
 		a1 = qc.getRowNumbers(4, "13");
@@ -234,25 +237,40 @@ public class QC implements Serializable{
 		
 		a = qc.getRowNumbersContainingKeys(13, "brown boot");
 		System.out.println(a.length + " rows found");
-		/*b = qc.getRows(a);		
+		stopwatch.printElapsedtimeInMillisAndReset();		
+		b = qc.getRows(a);		
 		h = 0;
 		for (String[] c : b)
-			System.out.println(++h + ") " + Arrays.deepToString(c));*/
-		stopwatch.printElapsedtimeInMillisAndReset();		
-
-		a = qc.getRowNumbersContainingKeys(13, "brown boot");
-		System.out.println(a.length + " rows found");
-		//System.out.println(qc.getJSONRows(a));
+			System.out.println(++h + ") " + Arrays.deepToString(c));
 		stopwatch.printElapsedtimeInMillisAndReset();
 
 		a = qc.getRowNumbersContainingKeys(13, "brown boot");
 		System.out.println(a.length + " rows found");
-		//System.out.println(qc.getJSONRows(a));
 		stopwatch.printElapsedtimeInMillisAndReset();
-
-		Scanner scanner = new Scanner(System.in);
-		scanner.next();
+		System.out.println(qc.getJSONRows(a));
+		stopwatch.printElapsedtimeInMillisAndReset();*/
 		
+		Scanner scanner = new Scanner(System.in);
+		boolean bc = true;
+		while (bc) {
+			stopwatch.reset();
+			a = qc.getRowNumbersContaining(3, "brown boot");
+			System.out.println(a.length + " rows found");
+			stopwatch.printElapsedtimeInMillisAndReset();
+			System.out.println(qc.getJSONRows(a));
+			stopwatch.printElapsedtimeInMillisAndReset();
+
+			stopwatch.reset();
+			a = qc.getRowNumbersContainingKeys(3, "brown boot");
+			System.out.println(a.length + " rows found");
+			stopwatch.printElapsedtimeInMillisAndReset();
+			System.out.println(qc.getJSONRows(a));
+			stopwatch.printElapsedtimeInMillisAndReset();
+					
+			String in = scanner.next();
+			if (in.equals("end"))
+				bc = false;
+		}
 		scanner.close();
 		System.out.println("done");
 	}
