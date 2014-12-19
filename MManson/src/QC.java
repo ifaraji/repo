@@ -204,14 +204,14 @@ public class QC implements Serializable{
 		int[] a, a1;
 		String[][] b;
 
-		System.out.println(Arrays.deepToString(qc.getRow(65348)));		
+		/*System.out.println(Arrays.deepToString(qc.getRow(65348)));		
 		stopwatch.printElapsedtimeInMillisAndReset();
 
 		System.out.println(Arrays.deepToString(qc.getRow(100)));		
 		System.out.println(Arrays.deepToString(qc.getRow(150)));		
 		System.out.println(Arrays.deepToString(qc.getRow(200)));		
 		System.out.println(Arrays.deepToString(qc.getRow(250)));		
-		stopwatch.printElapsedtimeInMillisAndReset();
+		stopwatch.printElapsedtimeInMillisAndReset();*/
 		
 		/*a = qc.getRows(2, new String[] {"cher", "goddess"});
 		b = qc.getRows(a);
@@ -257,14 +257,16 @@ public class QC implements Serializable{
 			a = qc.getRowNumbersContaining(3, "brown boot");
 			System.out.println(a.length + " rows found");
 			stopwatch.printElapsedtimeInMillisAndReset();
-			System.out.println(qc.getJSONRows(a));
+			qc.getJSONRows(a);
+			System.out.println("To JSON string...");
 			stopwatch.printElapsedtimeInMillisAndReset();
 
 			stopwatch.reset();
 			a = qc.getRowNumbersContainingKeys(3, "brown boot");
 			System.out.println(a.length + " rows found");
 			stopwatch.printElapsedtimeInMillisAndReset();
-			System.out.println(qc.getJSONRows(a));
+			qc.getJSONRows(a);
+			System.out.println("To JSON string...");
 			stopwatch.printElapsedtimeInMillisAndReset();
 					
 			String in = scanner.next();

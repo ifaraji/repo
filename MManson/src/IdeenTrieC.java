@@ -253,40 +253,40 @@ public class IdeenTrieC implements Serializable {
 			return findStartWith(node.right, key, nodeValue);
 	}
 
-	private void collectContains(Node node, String prefix, String containsStr, ArrayList<String> keys) {
+	private void collectContains(Node node, String prefix, String key, ArrayList<String> keys) {
 		if (node == null) return;
 
-		collectContains(node.left, prefix, containsStr, keys);
+		collectContains(node.left, prefix, key, keys);
 		
 		String nodeRealValue = prefix + new String(node.key);
-		if (node.stIdx > 0 && nodeRealValue.contains(containsStr))
+		if (node.stIdx > 0 && nodeRealValue.contains(key))
 			keys.add(nodeRealValue);
 		
-		collectContains(node.middle, nodeRealValue, containsStr, keys);
+		collectContains(node.middle, nodeRealValue, key, keys);
 
-		collectContains(node.right, prefix, containsStr, keys);
+		collectContains(node.right, prefix, key, keys);
 	}
 	
-	//TODO void collectContains(Node node, String prefix, String key, int check, ArrayList<String> keys) //just to reduce the 3 of contains. thats all
+	//TODO just to reduce the # of contains. thats all
 	private void collectContains(Node node, String prefix, String key, boolean check, ArrayList<String> keys) {
-		/*if (node == null) return;
+		if (node == null) return;
 
 		String nodeRealValue = prefix + new String(node.key);
+		boolean checkForLnR = check; 
 		
-		if(check) 
-			if (node.stIdx > 0)
-				keys.add(nodeRealValue);
-		
-		if (nodeRealValue.contains(key)) check = true;
-		
-		if (node.stIdx > 0 && keyCharAt == key.length())
+		if(!check) {
+			check = nodeRealValue.contains(key);
+		}
+
+		if (check && node.stIdx > 0)
 			keys.add(nodeRealValue);
 
-		collectContains(node.left, prefix, key, keyCharAt, keys);
-		collectContains(node.middle, nodeRealValue, key, keyCharAt, keys);
-		collectContains(node.right, prefix, key, keyCharAt, keys);*/
+		collectContains(node.left, prefix, key, checkForLnR, keys);
+		collectContains(node.middle, nodeRealValue, key, check, keys);
+		collectContains(node.right, prefix, key, checkForLnR, keys);
 	}
 
+	//TODO int[] collectContains(Node node, String prefix, String key)
 	private int[] collectContains(Node node, String prefix, String key) {
 		if (node == null) return null;
 
@@ -308,24 +308,25 @@ public class IdeenTrieC implements Serializable {
 		return self;
 	}
 	
-	//TODO int[] collectContains(Node node, String prefix, String key, int keyCharAt)
-	private int[] collectContains(Node node, String prefix, String key, int keyCharAt) {
+	//TODO just to reduce the # of contains. thats all
+	private int[] collectContains(Node node, String prefix, String key, boolean check) {
 		if (node == null) return null;
 
-		int lcp = CharArrayUtils.lcp(node.key, key.substring(keyCharAt).toCharArray());
-		if (lcp > 0 && lcp == node.key.length)
-			keyCharAt = lcp;
-		if (lcp > 0 && lcp == key.length())
-			keyCharAt = lcp;
-		
-		int[] self = null;
-		if (node.stIdx > 0 && keyCharAt == key.length())
-			self = ((AbstractByteBuffer) ST[node.stIdx]).getRows();
-
-		int[] left = collectContains(node.left, prefix, key, keyCharAt);
 		String nodeRealValue = prefix + new String(node.key);
-		int[] middle = collectContains(node.middle, nodeRealValue, key, keyCharAt);
-		int[] right = collectContains(node.right, prefix, key, keyCharAt);
+		boolean checkForLnR = check; 
+		
+		if(!check) {
+			check = nodeRealValue.contains(key);
+		}
+
+		int[] self = null;
+		if (check && node.stIdx > 0)
+			self = ((AbstractByteBuffer) ST[node.stIdx]).getRows();
+		
+		
+		int[] left = collectContains(node.left, prefix, key, checkForLnR);
+		int[] middle = collectContains(node.middle, nodeRealValue, key, check);
+		int[] right = collectContains(node.right, prefix, key, checkForLnR);
 
 		self = IntArrayUtils.merge(self, left);
 		self = IntArrayUtils.merge(self, middle);
@@ -352,6 +353,35 @@ public class IdeenTrieC implements Serializable {
 		int[] middle = collectContains(node.middle, nodeRealValue, keys);
 
 		int[] right = collectContains(node.right, prefix, keys);
+
+		self = IntArrayUtils.merge(self, left);
+		self = IntArrayUtils.merge(self, middle);
+		self = IntArrayUtils.merge(self, right);
+
+		return self;
+	}
+	
+	//TODO //TODO just to reduce the # of contains. thats all
+	private int[] collectContains(Node node, String prefix, String[] keys, boolean check) {
+		if (node == null) return null;
+
+		String nodeRealValue = prefix + new String(node.key);
+		boolean checkForLnR = check; 
+		
+		if(!check) {
+			boolean b = true;
+			for (String key : keys)//TODO Seriously? Regex at least!!!
+				b = b && nodeRealValue.contains(key);
+			check = b;
+		}
+
+		int[] self = null;
+		if (check && node.stIdx > 0)
+			self = ((AbstractByteBuffer) ST[node.stIdx]).getRows();
+
+		int[] left = collectContains(node.left, prefix, keys, checkForLnR);
+		int[] middle = collectContains(node.middle, nodeRealValue, keys, check);
+		int[] right = collectContains(node.right, prefix, keys, checkForLnR);
 
 		self = IntArrayUtils.merge(self, left);
 		self = IntArrayUtils.merge(self, middle);
@@ -425,11 +455,11 @@ public class IdeenTrieC implements Serializable {
 	}
 
 	public int[] getRowsContaining(String key) {
-		return collectContains(root, "", key);
+		return collectContains(root, "", key, false);
 	}
 
 	public int[] getRowsContaining(String keys, String delimiter) {
-		return collectContains(root, "", keys.split(delimiter));
+		return collectContains(root, "", keys.split(delimiter), false);
 	}
 
 	// TODO getRowsContainingPattern
@@ -460,7 +490,7 @@ public class IdeenTrieC implements Serializable {
 
 	public Iterable<String> keysContain(String containStr) {
 		ArrayList<String> keys = new ArrayList<String>();
-		collectContains(root, "", containStr, keys);
+		collectContains(root, "", containStr, false, keys);
 		return keys;
 	}
 
