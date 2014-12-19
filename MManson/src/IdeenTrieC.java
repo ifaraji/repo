@@ -266,20 +266,66 @@ public class IdeenTrieC implements Serializable {
 
 		collectContains(node.right, prefix, containsStr, keys);
 	}
+	
+	//TODO void collectContains(Node node, String prefix, String key, int check, ArrayList<String> keys) //just to reduce the 3 of contains. thats all
+	private void collectContains(Node node, String prefix, String key, boolean check, ArrayList<String> keys) {
+		/*if (node == null) return;
 
-	private int[] collectContains(Node node, String prefix, String containsStr) {
+		String nodeRealValue = prefix + new String(node.key);
+		
+		if(check) 
+			if (node.stIdx > 0)
+				keys.add(nodeRealValue);
+		
+		if (nodeRealValue.contains(key)) check = true;
+		
+		if (node.stIdx > 0 && keyCharAt == key.length())
+			keys.add(nodeRealValue);
+
+		collectContains(node.left, prefix, key, keyCharAt, keys);
+		collectContains(node.middle, nodeRealValue, key, keyCharAt, keys);
+		collectContains(node.right, prefix, key, keyCharAt, keys);*/
+	}
+
+	private int[] collectContains(Node node, String prefix, String key) {
 		if (node == null) return null;
 
-		int[] left = collectContains(node.left, prefix, containsStr);
+		int[] left = collectContains(node.left, prefix, key);
 		
 		String nodeRealValue = prefix + new String(node.key);
 		int[] self = null;
-		if (node.stIdx > 0 && nodeRealValue.contains(containsStr))
+		if (node.stIdx > 0 && nodeRealValue.contains(key))
 			self = ((AbstractByteBuffer) ST[node.stIdx]).getRows();
 		
-		int[] middle = collectContains(node.middle, nodeRealValue, containsStr);
+		int[] middle = collectContains(node.middle, nodeRealValue, key);
 
-		int[] right = collectContains(node.right, prefix, containsStr);
+		int[] right = collectContains(node.right, prefix, key);
+
+		self = IntArrayUtils.merge(self, left);
+		self = IntArrayUtils.merge(self, middle);
+		self = IntArrayUtils.merge(self, right);
+
+		return self;
+	}
+	
+	//TODO int[] collectContains(Node node, String prefix, String key, int keyCharAt)
+	private int[] collectContains(Node node, String prefix, String key, int keyCharAt) {
+		if (node == null) return null;
+
+		int lcp = CharArrayUtils.lcp(node.key, key.substring(keyCharAt).toCharArray());
+		if (lcp > 0 && lcp == node.key.length)
+			keyCharAt = lcp;
+		if (lcp > 0 && lcp == key.length())
+			keyCharAt = lcp;
+		
+		int[] self = null;
+		if (node.stIdx > 0 && keyCharAt == key.length())
+			self = ((AbstractByteBuffer) ST[node.stIdx]).getRows();
+
+		int[] left = collectContains(node.left, prefix, key, keyCharAt);
+		String nodeRealValue = prefix + new String(node.key);
+		int[] middle = collectContains(node.middle, nodeRealValue, key, keyCharAt);
+		int[] right = collectContains(node.right, prefix, key, keyCharAt);
 
 		self = IntArrayUtils.merge(self, left);
 		self = IntArrayUtils.merge(self, middle);
@@ -432,19 +478,19 @@ public class IdeenTrieC implements Serializable {
 			file.close();
 			System.out.println("Deserialized...");
 		} else {
-			DataLoader dl = DataLoader.getInstance("..\\..\\mmsil2.csv");
-			it = new IdeenTrieC(dl.numOfRows(), false);
+			DataLoader dl = DataLoader.getInstance("..\\..\\attrs.csv");
+			it = new IdeenTrieC(/*dl.numOfRows()*/ 20, false);
 			int rowCount = 0;
 			String[] row = null;
 			try {
-				while (dl.next()) {
+				while (dl.next() && rowCount < 20 ) {
 					rowCount++;
 					row = dl.getCurrentRow();
-					it.insert(row[3].substring(1, row[3].length() - 1), rowCount);
+					it.insert(row[2]/*.substring(1, row[2].length() - 1)*/, rowCount);
 				}
 				it.finalize();
 			} catch (Exception e) {
-				System.out.println(rowCount + " " + row[3]);
+				System.out.println(rowCount + " " + row[2]);
 				e.printStackTrace();
 				throw e;
 			}
@@ -492,10 +538,8 @@ public class IdeenTrieC implements Serializable {
 			System.out.println("0-Exit");
 			System.out.println("1-List all keys");
 			System.out.println("2-Look for a key");
-			System.out
-					.println("3-List all keys which begin with a specific prefix");
-			System.out
-					.println("4-List all keys which contain a specific substring");
+			System.out.println("3-List all keys which begin with a specific prefix");
+			System.out.println("4-List all keys which contain a specific substring");
 			System.out.println("5-Get row value");
 			System.out.print("Choice:");
 			try {
