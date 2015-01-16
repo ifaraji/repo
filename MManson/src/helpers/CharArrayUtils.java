@@ -54,6 +54,24 @@ public class CharArrayUtils {
 		
 		return str1[i] < str2[i];
 	}
+		
+	public static int contains(char[] src, char[] str) {
+		return contains(src, 0, str, 0);
+	}
+
+	public static int contains(char[] src, char[] str, int offset) {
+		return contains(src, 0, str, offset);
+	}
+
+	private static int contains(char[] src, int i, char[] str, int j) {
+		if (j == str.length)
+			return str.length;
+		if (i == src.length)
+			return j;
+		if (src[i] == str[j])
+			return contains(src, i+1, str, j+1);
+		return contains(src, i+1, str, 0);		
+	}
 	
 	public static void main(String[] args) {
 		String s = "abcdefghijk";

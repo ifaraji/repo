@@ -23,7 +23,6 @@ public class ByteBufferI {
 		try {
 			aClass = (Class<ByteBufferInterface>) classLoader.loadClass(l);
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -31,7 +30,6 @@ public class ByteBufferI {
 		try {
 			constructor = aClass.getConstructor(byte[].class);
 		} catch (NoSuchMethodException | SecurityException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -40,7 +38,6 @@ public class ByteBufferI {
 			ibf = constructor.newInstance(byteArray);
 		} catch (InstantiationException | IllegalAccessException
 				| IllegalArgumentException | InvocationTargetException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		

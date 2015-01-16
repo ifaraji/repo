@@ -6,7 +6,6 @@ import helpers.Stopwatch;
 import java.io.IOException;
 import java.io.Serializable;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.Scanner;
 
 //TODO sorted result set (requires the trie returns row nums based on its key sorted)
@@ -97,7 +96,7 @@ public class QC implements Serializable{
     	return row;
     }
     
-    //TODO should be cater for pagination
+    //TODO should cater for pagination
     public String[][] getRows(int[] rows){
     	String[][] rowSet = new String[rows.length][colsCount];    	
     	for(int i = 0; i < rows.length; i++) {
@@ -170,7 +169,7 @@ public class QC implements Serializable{
     	QC qc;
 		Stopwatch stopwatch = new Stopwatch();
 		
-		DataLoader dl = DataLoader.getInstance("..\\..\\mmsil2.csv");	
+		DataLoader dl = DataLoader.getInstance("..\\..\\mmsil2.csv", 500000);	
 		stopwatch.printElapsedtimeAndReset();
 		//qc = new QC(new String[]{"tpc", "category_code", "brand", "product_type", "colour", "size1"}, dl.numOfRows());
 		qc = new QC(new String[]{"ITEM","ITEM_PARENT","PRIMARY_EAN","ITEM_NAME","BRAND","PRODUCT_TYPE","COLOUR","COLOUR_CODE","SIZE1","SIZE1_CODE","SECONDARY_SIZE","SECONDARY_SIZE_CODE","DIMENSION","PRICE","HAZCHEM","SUPPLIER","SUPPLIER_COLOR","INNER_PACK_SIZE","EA_LENGTH","EA_WIDTH","EA_HEIGHT","EA_VOLUME","EA_WEIGHT","RETURNABLE_IND","INSTRUCTION_REQ_IND","RESTRICTED_AGE","ITEM_TYPE"}, dl.numOfRows(), 0);
@@ -201,8 +200,9 @@ public class QC implements Serializable{
 		stopwatch.printElapsedtimeAndReset();
 		
 		//***********************************************************************
-		int[] a, a1;
-		String[][] b;
+		int[] a; 
+		//int[] a1;
+		//String[][] b;
 
 		/*System.out.println(Arrays.deepToString(qc.getRow(65348)));		
 		stopwatch.printElapsedtimeInMillisAndReset();
@@ -254,18 +254,18 @@ public class QC implements Serializable{
 		boolean bc = true;
 		while (bc) {
 			stopwatch.reset();
-			a = qc.getRowNumbersContaining(3, "brown boot");
+			/*a = qc.getRowNumbersContaining(3, "strip");
 			System.out.println(a.length + " rows found");
 			stopwatch.printElapsedtimeInMillisAndReset();
 			qc.getJSONRows(a);
 			System.out.println("To JSON string...");
-			stopwatch.printElapsedtimeInMillisAndReset();
+			stopwatch.printElapsedtimeInMillisAndReset();*/
 
 			stopwatch.reset();
-			a = qc.getRowNumbersContainingKeys(3, "brown boot");
+			a = qc.getRowNumbersContainingKeys(3, "strip blue");
 			System.out.println(a.length + " rows found");
 			stopwatch.printElapsedtimeInMillisAndReset();
-			qc.getJSONRows(a);
+			//System.out.println(qc.getJSONRows(a));
 			System.out.println("To JSON string...");
 			stopwatch.printElapsedtimeInMillisAndReset();
 					

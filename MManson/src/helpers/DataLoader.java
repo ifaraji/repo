@@ -11,11 +11,20 @@ public class DataLoader implements Serializable
 	private String[][] rows;
 	private int N;
 	private int C;
+	
 	private DataLoader(String filename) throws IOException {
 		rows = new String[10000][];
 		N = 0;
 		C = -1;
 		readFile(filename);
+		System.out.println(numOfRows() + " rows loaded");
+	}
+	
+	private DataLoader(String filename, int maxRows) throws IOException {
+		rows = new String[10000][];
+		N = 0;
+		C = -1;
+		readFile(filename, maxRows);
 		System.out.println(numOfRows() + " rows loaded");
 	}
 	
@@ -30,6 +39,34 @@ public class DataLoader implements Serializable
 			{
 		        line = br.readLine();
 		        if (line == null)
+		        	break;
+		        else
+		        {
+		        	N++;
+		        	rows[i] = line.split(",");
+		        	i++;
+		        	if (i == rows.length)
+		        		expandRows();
+		        }
+			}
+		}
+		finally {
+			br.close();
+		}
+
+	}
+
+	private void readFile(String filename, int maxRows) throws IOException {
+		BufferedReader br = null;
+		int i = 0;
+		try
+		{
+			br = new BufferedReader(new FileReader(filename));
+			String line;
+			while (true)
+			{
+		        line = br.readLine();
+		        if (line == null || i == maxRows)
 		        	break;
 		        else
 		        {
@@ -81,4 +118,11 @@ public class DataLoader implements Serializable
 		dl = new DataLoader(filename);
 		return dl;
 	}
+	
+	public static DataLoader getInstance(String filename, int rows) throws IOException, ClassNotFoundException {
+		System.out.println("Loading data ...");
+		DataLoader dl = null;
+		dl = new DataLoader(filename, rows);
+		return dl;
+	}	
 }

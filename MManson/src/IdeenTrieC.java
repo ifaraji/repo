@@ -34,7 +34,7 @@ public class IdeenTrieC implements Serializable {
 		private Node right;
 		private Node middle;
 		private int stIdx;
-		private int O;
+		private int occurrence;
 	}
 
 	private Node root;
@@ -64,7 +64,7 @@ public class IdeenTrieC implements Serializable {
 			node = new Node();
 			node.key = key.toCharArray();
 			node.stIdx = ++N;
-			node.O++;
+			node.occurrence++;
 			if (!UK)
 				ROWS[value] = node.stIdx;
 			return node;
@@ -77,7 +77,7 @@ public class IdeenTrieC implements Serializable {
 				&& longestCommonPrefix == key.length()) { // exact match
 			if (node.stIdx == 0)
 				node.stIdx = ++N;
-			node.O++;
+			node.occurrence++;
 			if (!UK)
 				ROWS[value] = node.stIdx;
 		} else if (longestCommonPrefix > 0
@@ -106,10 +106,10 @@ public class IdeenTrieC implements Serializable {
 		nRNK.key = remainingNodeKey;
 		nRNK.middle = node.middle;
 		nRNK.stIdx = node.stIdx;
-		nRNK.O = node.O;
+		nRNK.occurrence = node.occurrence;
 
 		node.stIdx = 0;
-		node.O = 0;
+		node.occurrence = 0;
 		node.middle = nRNK;
 
 		Node nRK = null;
@@ -117,7 +117,7 @@ public class IdeenTrieC implements Serializable {
 			nRK = new Node();
 			nRK.key = remainingKey.toCharArray();
 			nRK.stIdx = ++N;
-			nRK.O++;
+			nRK.occurrence++;
 
 			if (CharArrayUtils.smaller(nRK.key, nRNK.key))
 				nRNK.left = nRK;
@@ -125,7 +125,7 @@ public class IdeenTrieC implements Serializable {
 				nRNK.right = nRK;
 		} else {
 			node.stIdx = ++N;
-			node.O++;
+			node.occurrence++;
 		}
 		if (!UK)
 			ROWS[value] = N;
@@ -140,9 +140,8 @@ public class IdeenTrieC implements Serializable {
 		buildST(node.left, path + "L");
 
 		if (node.stIdx > 0) {
-			ST[node.stIdx] = ByteBufferI.getByteBuffer(ByteUtils
-					.pathToByteArray(path));
-			((AbstractByteBuffer) ST[node.stIdx]).createRows(node.O);
+			ST[node.stIdx] = ByteBufferI.getByteBuffer(ByteUtils.pathToByteArray(path));
+			((AbstractByteBuffer) ST[node.stIdx]).createRows(node.occurrence);
 		}
 
 		buildST(node.middle, path + "M");
@@ -253,7 +252,7 @@ public class IdeenTrieC implements Serializable {
 			return findStartWith(node.right, key, nodeValue);
 	}
 
-	private void collectContains(Node node, String prefix, String key, ArrayList<String> keys) {
+	/*private void collectContains(Node node, String prefix, String key, ArrayList<String> keys) {
 		if (node == null) return;
 
 		collectContains(node.left, prefix, key, keys);
@@ -267,7 +266,7 @@ public class IdeenTrieC implements Serializable {
 		collectContains(node.right, prefix, key, keys);
 	}
 	
-	//TODO just to reduce the # of contains. thats all
+	//"check" just to reduce the # of contains. thats all
 	private void collectContains(Node node, String prefix, String key, boolean check, ArrayList<String> keys) {
 		if (node == null) return;
 
@@ -284,10 +283,30 @@ public class IdeenTrieC implements Serializable {
 		collectContains(node.left, prefix, key, checkForLnR, keys);
 		collectContains(node.middle, nodeRealValue, key, check, keys);
 		collectContains(node.right, prefix, key, checkForLnR, keys);
-	}
+	}*/
+	
+	//"check" just to reduce the # of contains. "offset" to avoid full key comparison. thats all
+	private void collectContains(Node node, String prefix, String key, int offset, boolean check, ArrayList<String> keys) {
+		if (node == null) return;
 
-	//TODO int[] collectContains(Node node, String prefix, String key)
-	private int[] collectContains(Node node, String prefix, String key) {
+		String nodeRealValue = prefix + new String(node.key);
+		boolean checkForLnR = check; 
+		
+		int newOffset = offset;
+		if(!check) {
+			newOffset = CharArrayUtils.contains(node.key, key.toCharArray(), offset); 
+			check = newOffset == key.length();
+		}
+
+		if (check && node.stIdx > 0)
+			keys.add(nodeRealValue);
+
+		collectContains(node.left,   prefix,        key, offset,    checkForLnR, keys);
+		collectContains(node.middle, nodeRealValue, key, newOffset, check,       keys);
+		collectContains(node.right,  prefix,        key, offset,    checkForLnR, keys);
+	}
+	
+	/*private int[] collectContains(Node node, String prefix, String key) {
 		if (node == null) return null;
 
 		int[] left = collectContains(node.left, prefix, key);
@@ -308,7 +327,7 @@ public class IdeenTrieC implements Serializable {
 		return self;
 	}
 	
-	//TODO just to reduce the # of contains. thats all
+	//"check" just to reduce the # of contains. thats all
 	private int[] collectContains(Node node, String prefix, String key, boolean check) {
 		if (node == null) return null;
 
@@ -333,9 +352,38 @@ public class IdeenTrieC implements Serializable {
 		self = IntArrayUtils.merge(self, right);
 
 		return self;
-	}
+	}*/
+	
+	//"check" just to reduce the # of contains. "offset" to avoid full key comparison. thats all
+	private int[] collectContains(Node node, String key, int offset, boolean check) {
+		if (node == null) return null;
 
-	private int[] collectContains(Node node, String prefix, String[] keys) {
+		//String nodeRealValue = prefix + new String(node.key);
+		boolean checkForLnR = check; 
+		
+		int newOffset = offset;
+		if(!check) {
+			newOffset = CharArrayUtils.contains(node.key, key.toCharArray(), offset); 
+			check = newOffset == key.length();
+		}
+
+		int[] self = null;
+		if (check && node.stIdx > 0)
+			self = ((AbstractByteBuffer) ST[node.stIdx]).getRows();
+		
+		
+		int[] left = collectContains(node.left, key, offset, checkForLnR);
+		int[] middle = collectContains(node.middle, key, newOffset, check);
+		int[] right = collectContains(node.right, key, offset, checkForLnR);
+
+		self = IntArrayUtils.merge(self, left);
+		self = IntArrayUtils.merge(self, middle);
+		self = IntArrayUtils.merge(self, right);
+
+		return self;
+	}	
+
+	/*private int[] collectContains(Node node, String prefix, String[] keys) {
 		if (node == null) return null;
 
 		int[] left = collectContains(node.left, prefix, keys);
@@ -344,7 +392,7 @@ public class IdeenTrieC implements Serializable {
 		int[] self = null;
 		if (node.stIdx > 0 ) { 
 			boolean b = true;
-			for (String key : keys)//TODO Seriously? Regex at least!!!
+			for (String key : keys)//Seriously? Regex at least!!!
 				b = b && nodeRealValue.contains(key);
 			if (b)
 				self = ((AbstractByteBuffer) ST[node.stIdx]).getRows();
@@ -361,7 +409,7 @@ public class IdeenTrieC implements Serializable {
 		return self;
 	}
 	
-	//TODO //TODO just to reduce the # of contains. thats all
+	//"check" just to reduce the # of contains. thats all
 	private int[] collectContains(Node node, String prefix, String[] keys, boolean check) {
 		if (node == null) return null;
 
@@ -370,7 +418,7 @@ public class IdeenTrieC implements Serializable {
 		
 		if(!check) {
 			boolean b = true;
-			for (String key : keys)//TODO Seriously? Regex at least!!!
+			for (String key : keys)//Seriously? Regex at least!!!
 				b = b && nodeRealValue.contains(key);
 			check = b;
 		}
@@ -382,6 +430,43 @@ public class IdeenTrieC implements Serializable {
 		int[] left = collectContains(node.left, prefix, keys, checkForLnR);
 		int[] middle = collectContains(node.middle, nodeRealValue, keys, check);
 		int[] right = collectContains(node.right, prefix, keys, checkForLnR);
+
+		self = IntArrayUtils.merge(self, left);
+		self = IntArrayUtils.merge(self, middle);
+		self = IntArrayUtils.merge(self, right);
+
+		return self;
+	}*/
+
+	//"check" just to reduce the # of contains. "offset" to avoid full key comparison. thats all
+	private int[] collectContains(Node node, /*String prefix, */String[] keys, int[] offsets, boolean check) {
+		if (node == null) return null;
+		
+		//String nodeRealvalue = prefix + new String(node.key);
+		/*if (nodeRealvalue.equals("\"s") || nodeRealvalue.equals("\"st") || nodeRealvalue.equals("\"str") || nodeRealvalue.equals("\"stri") || nodeRealvalue.equals("\"stripe "))
+			System.out.println("yes");*/
+		/*if (nodeRealvalue.equals("\"brooksfield bfu574 pv self stripe trouser:black:36\""))
+			System.out.println("yes");*/
+		
+		boolean checkForLnR = check; 
+				
+		int newOffsets[] = offsets.clone();
+		if(!check) {
+			boolean b = true;			
+			for (int i=0; i<keys.length; i++) {
+				newOffsets[i] = CharArrayUtils.contains(node.key, keys[i].toCharArray(), newOffsets[i]);				
+				b = b && (newOffsets[i] == keys[i].length());
+			}
+			check = b;
+		}
+
+		int[] self = null;
+		if (check && node.stIdx > 0)
+			self = ((AbstractByteBuffer) ST[node.stIdx]).getRows();
+
+		int[] left   = collectContains(node.left,   /*prefix,*/        keys, offsets,    checkForLnR);
+		int[] middle = collectContains(node.middle, /*nodeRealvalue,*/ keys, newOffsets, check);
+		int[] right  = collectContains(node.right,  /*prefix,*/        keys, offsets,    checkForLnR);
 
 		self = IntArrayUtils.merge(self, left);
 		self = IntArrayUtils.merge(self, middle);
@@ -455,11 +540,12 @@ public class IdeenTrieC implements Serializable {
 	}
 
 	public int[] getRowsContaining(String key) {
-		return collectContains(root, "", key, false);
+		return collectContains(root, key, 0, false);
 	}
 
 	public int[] getRowsContaining(String keys, String delimiter) {
-		return collectContains(root, "", keys.split(delimiter), false);
+		String[] keysArray = keys.split(delimiter);
+		return collectContains(root, /*"",*/ keysArray, new int[keysArray.length], false);
 	}
 
 	// TODO getRowsContainingPattern
@@ -490,7 +576,7 @@ public class IdeenTrieC implements Serializable {
 
 	public Iterable<String> keysContain(String containStr) {
 		ArrayList<String> keys = new ArrayList<String>();
-		collectContains(root, "", containStr, false, keys);
+		collectContains(root, "", containStr, 0, false, keys);
 		return keys;
 	}
 
@@ -509,11 +595,11 @@ public class IdeenTrieC implements Serializable {
 			System.out.println("Deserialized...");
 		} else {
 			DataLoader dl = DataLoader.getInstance("..\\..\\attrs.csv");
-			it = new IdeenTrieC(/*dl.numOfRows()*/ 20, false);
+			it = new IdeenTrieC(/*dl.numOfRows()*/ 50, false);
 			int rowCount = 0;
 			String[] row = null;
 			try {
-				while (dl.next() && rowCount < 20 ) {
+				while (dl.next() && rowCount < 50 ) {
 					rowCount++;
 					row = dl.getCurrentRow();
 					it.insert(row[2]/*.substring(1, row[2].length() - 1)*/, rowCount);
