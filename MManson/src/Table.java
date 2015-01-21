@@ -8,9 +8,8 @@ import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.Scanner;
 
-//TODO sorted result set (requires the trie returns row nums based on its key sorted)
 //TODO master field search :) (wanna cater for a search scenario like google, just a text box and no dropdowns, full search criteria is entered in the text box like 'black leather pump'; all related fields should be searched)
-public class QC implements Serializable{
+public class Table implements Serializable{
 
 	private static final long serialVersionUID = 1L;
 
@@ -27,7 +26,7 @@ public class QC implements Serializable{
     private Column[] columns;
     private String[] columnNames;
        
-    public QC(String[] cols, int numOfRows){
+    public Table(String[] cols, int numOfRows){
     	columnNames = cols;
     	colsCount = cols.length;
     	columns = new Column[colsCount];
@@ -39,7 +38,7 @@ public class QC implements Serializable{
     	}
     }
     
-    public QC(String[] cols, int numOfRows, int uniqueColumnIndex){   
+    public Table(String[] cols, int numOfRows, int uniqueColumnIndex){   
     	columnNames = cols;
     	colsCount = cols.length;
     	columns = new Column[colsCount];
@@ -66,7 +65,7 @@ public class QC implements Serializable{
     	}
     }*/
     
-    public QC insert(int columnId, String columnValue, int rowIndex) {
+    public Table insert(int columnId, String columnValue, int rowIndex) {
     	columns[columnId].col.insert(columnValue, rowIndex);
     	return this;
     }
@@ -102,15 +101,12 @@ public class QC implements Serializable{
     	for(int i = 0; i < rows.length; i++) {
     		rowSet[i] = getRow(rows[i]);
     	}
+    	//TODO sort based on column index
     	return rowSet;
     }
     
     public String getJSONRows(int[] rows){
-    	String[][] rowSet = new String[rows.length][colsCount];    	
-    	for(int i = 0; i < rows.length; i++) {
-    		rowSet[i] = getRow(rows[i]);
-    	}
-    	
+    	String[][] rowSet = getRows(rows);    	    	
 		JSONResultSet j = new JSONResultSet(this.columnNames);		
     	return j.generate(rowSet);
     }
@@ -166,13 +162,13 @@ public class QC implements Serializable{
     }
     
     public static void main(String[] args) throws IOException, ClassNotFoundException, SQLException {
-    	QC qc;
+    	Table qc;
 		Stopwatch stopwatch = new Stopwatch();
 		
 		DataLoader dl = DataLoader.getInstance("..\\..\\mmsil2.csv", 500000);	
 		stopwatch.printElapsedtimeAndReset();
 		//qc = new QC(new String[]{"tpc", "category_code", "brand", "product_type", "colour", "size1"}, dl.numOfRows());
-		qc = new QC(new String[]{"ITEM","ITEM_PARENT","PRIMARY_EAN","ITEM_NAME","BRAND","PRODUCT_TYPE","COLOUR","COLOUR_CODE","SIZE1","SIZE1_CODE","SECONDARY_SIZE","SECONDARY_SIZE_CODE","DIMENSION","PRICE","HAZCHEM","SUPPLIER","SUPPLIER_COLOR","INNER_PACK_SIZE","EA_LENGTH","EA_WIDTH","EA_HEIGHT","EA_VOLUME","EA_WEIGHT","RETURNABLE_IND","INSTRUCTION_REQ_IND","RESTRICTED_AGE","ITEM_TYPE"}, dl.numOfRows(), 0);
+		qc = new Table(new String[]{"ITEM","ITEM_PARENT","PRIMARY_EAN","ITEM_NAME","BRAND","PRODUCT_TYPE","COLOUR","COLOUR_CODE","SIZE1","SIZE1_CODE","SECONDARY_SIZE","SECONDARY_SIZE_CODE","DIMENSION","PRICE","HAZCHEM","SUPPLIER","SUPPLIER_COLOR","INNER_PACK_SIZE","EA_LENGTH","EA_WIDTH","EA_HEIGHT","EA_VOLUME","EA_WEIGHT","RETURNABLE_IND","INSTRUCTION_REQ_IND","RESTRICTED_AGE","ITEM_TYPE"}, dl.numOfRows(), 0);
 		/*qc = new QC(new String[]{"ITEM", "TPC", "CATEGORY_CODE", "CLASS_GROUP", "CLASS", "SUBCLASS", "BRAND", "COLOUR_IND",
 								"SIZE1_IND", "SIZE2_IND", "ONLINE_IND", "STATUS", "STATUS_DESC", "ITEM_NAME", "ITEM_SHORT_DESC",
 								"ITEM_LONG_DESC", "MIN_PRICE", "MAX_PRICE", "IMAGE_ADDR"}, dl.numOfRows(), 0);	*/		
