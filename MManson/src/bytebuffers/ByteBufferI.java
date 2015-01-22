@@ -16,6 +16,8 @@ public class ByteBufferI {
 		case 1: return new ByteBuffer01(byteArray);
 		}*/
 		String l = lpad(String.valueOf(byteArray.length),2,'0');
+		if (Integer.parseInt(l) > 25)
+			return new ByteBufferN(byteArray);
 		l = "bytebuffers.ByteBuffer" + l;
 		ClassLoader classLoader = ByteBufferI.class.getClassLoader();
 		

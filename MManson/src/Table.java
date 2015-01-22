@@ -151,12 +151,10 @@ public class Table implements Serializable{
     	return columns[columnIndex].col.getRowsContainingPattern(regex);
     }            
     
-    //TODO ensure the best algo will be impled
     public int[] and(int[] rowNumbers1, int[] rowNumbers2){
     	return IntArrayUtils.intersection(rowNumbers1, rowNumbers2);
     }
     
-    //TODO ensure the best algo will be impled
     public int[] or(int[] rowNumbers1, int[] rowNumbers2){
     	return IntArrayUtils.union(rowNumbers1, rowNumbers2);
     }
