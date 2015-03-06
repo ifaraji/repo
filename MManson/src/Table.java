@@ -1,3 +1,4 @@
+import helpers.CharArrayUtils;
 import helpers.DataLoader;
 import helpers.IntArrayUtils;
 import helpers.JSONResultSet;
@@ -12,6 +13,8 @@ import java.util.Scanner;
 public class Table implements Serializable{
 
 	private static final long serialVersionUID = 1L;
+	
+	private int tableId;
 
     public static class Column implements Serializable{
 		private static final long serialVersionUID = 1L;
@@ -19,7 +22,7 @@ public class Table implements Serializable{
         private IdeenTrieC col;
         //private Column next; <LL impl>
     }
-
+    
     //private Column first;    // beginning of bag <LL impl>
     private int colsCount; 		     //number of columns
     
@@ -65,12 +68,17 @@ public class Table implements Serializable{
     	}
     }*/
     
+    //TODO ...!!!
+    public void setId(int id) {
+    	tableId = id;
+    }
+    
     public Table insert(int columnId, String columnValue, int rowIndex) {
     	columns[columnId].col.insert(columnValue, rowIndex);
     	return this;
     }
     
-    public void finalize() {
+    public void seal() {
     	for(int i = 0; i < colsCount; i++){
     		columns[i].col.finalize();
     	}
@@ -159,6 +167,84 @@ public class Table implements Serializable{
     	return IntArrayUtils.union(rowNumbers1, rowNumbers2);
     }
     
+    //TODO loads this table. 
+    //TODO must be asynchronous
+    public void load(DataLoader dl, int tbc, QC qc) {
+    	
+    	class HelperThread extends Thread {
+    		DataLoader dl;
+    		int tbc;
+    		QC qc;
+    		public HelperThread(DataLoader dl, int tbc, QC qc){
+    			super();
+    			this.dl = dl;
+    			this.tbc = tbc;
+    			this.qc = qc;
+    		}
+    	}
+    	
+    	new HelperThread(dl, tbc, qc) {
+    		public void run() {
+    			int rowCount = 0;
+    			if (this.tbc < 0)
+    				this.tbc = colsCount;
+    			try {
+    				while(this.dl.next()){ 		
+    					rowCount++;
+    					String[] row = this.dl.getCurrentRow();
+    					for (int i = 0; i < this.tbc; i++) 
+    						try {
+    							insert(i, CharArrayUtils.unqoute(row[i]), rowCount);
+    						}catch (ArrayIndexOutOfBoundsException e) {
+    							insert(i, "", rowCount);
+    						}
+
+    					if (tbc < colsCount) {
+    						StringBuilder mergedCols = new StringBuilder("");
+    						for (int j = tbc; j < row.length; j++)		
+    							mergedCols.append(CharArrayUtils.unqoute(row[j])+" ");
+    						insert(tbc,mergedCols.toString(), rowCount);
+    					}
+    					if (rowCount % 100000 == 0) System.out.println("Tab-"+tableId+": " + rowCount + " rows inserted");
+    				}
+    				seal();
+    			}
+    			catch(Exception e) {
+    				e.printStackTrace();
+    			}
+    			qc.tabFinished(tableId);
+			}
+    	}.start();
+    	
+		/*int rowCount = 0;
+		if (tbc < 0)
+			tbc = colsCount;
+		try {
+			while(dl.next()){ 		
+				rowCount++;
+				String[] row = dl.getCurrentRow();
+				for (int i = 0; i < tbc; i++) 
+					try {
+						insert(i, CharArrayUtils.unqoute(row[i]), rowCount);
+					}catch (ArrayIndexOutOfBoundsException e) {
+						insert(i, "", rowCount);
+					}
+
+				if (tbc < colsCount) {
+					StringBuilder mergedCols = new StringBuilder("");
+					for (int j = tbc; j < row.length; j++)		
+						mergedCols.append(CharArrayUtils.unqoute(row[j])+" ");
+					insert(tbc,mergedCols.toString(), rowCount);
+				}
+				//if (rowCount % 100000 == 0) System.out.println(rowCount + " rows inserted");
+			}
+			finalize();
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}*/
+    }
+    
     public static void main(String[] args) throws IOException, ClassNotFoundException, SQLException {
     	Table qc;
 		Stopwatch stopwatch = new Stopwatch();
@@ -184,7 +270,7 @@ public class Table implements Serializable{
 				if (rowCount % 100000 == 0)
 					System.out.println(rowCount + " rows inserted");
 			}
-			qc.finalize();
+			qc.seal();
 		}
 		catch(Exception e) {
 			e.printStackTrace();

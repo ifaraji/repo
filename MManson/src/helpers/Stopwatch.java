@@ -24,9 +24,19 @@ public class Stopwatch {
 		System.out.println("E T: " + elapsedTime() + " Secs");
 		reset();
 	}
+	
+	public void printElapsedtimeAndReset(String msg) {
+		System.out.println("E T ("+msg+"): " + elapsedTime() + " Secs");
+		reset();
+	}
 		
 	public void printElapsedtimeInMillisAndReset() {
 		System.out.println("E T: " + elapsedTimeInMillis() + " Millis");
+		reset();
+	}
+	
+	public void printElapsedtimeInMillisAndReset(String msg) {
+		System.out.println("E T ("+msg+"): " + elapsedTimeInMillis() + " Millis");
 		reset();
 	}
 	
