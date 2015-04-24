@@ -3,6 +3,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Serializable;
+import java.sql.Connection;
 
 
 public class DataLoader implements Serializable
@@ -11,6 +12,11 @@ public class DataLoader implements Serializable
 	private String[][] rows;
 	private int N;
 	private int C;
+	
+	//TODO DataLoader(String query, Connection conn)
+	private DataLoader(String query, Connection conn) {
+		throw new UnsupportedOperationException("not implemented yet");
+	}
 	
 	private DataLoader(String filename) throws IOException {
 		rows = new String[10000][];

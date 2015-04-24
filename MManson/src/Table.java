@@ -169,6 +169,7 @@ public class Table implements Serializable{
     
     //TODO loads this table. 
     //TODO must be asynchronous
+    //TODO tbc reference is not appropriate here, must be handled in QC where query and table structure is being determined
     public void load(DataLoader dl, int tbc, QC qc) {
     	
     	class HelperThread extends Thread {
@@ -344,11 +345,22 @@ public class Table implements Serializable{
 			stopwatch.reset();
 			a = qc.getRowNumbersContainingKeys(3, "strip blue");
 			System.out.println(a.length + " rows found");
-			stopwatch.printElapsedtimeInMillisAndReset();
-			//System.out.println(qc.getJSONRows(a));
+			stopwatch.printElapsedtimeInMillisAndReset();			
+			qc.getJSONRows(a);//System.out.println(qc.getJSONRows(a));
 			System.out.println("To JSON string...");
 			stopwatch.printElapsedtimeInMillisAndReset();
-					
+
+			
+			a = qc.getRowNumbersContaining(3, "strip");
+			int[] b = qc.getRowNumbersContaining(3, "blue");
+			a = qc.and(a, b);
+			System.out.println(a.length + " rows found");
+			stopwatch.printElapsedtimeInMillisAndReset();			
+			qc.getJSONRows(a);//System.out.println(qc.getJSONRows(a));
+			System.out.println("To JSON string...");
+			stopwatch.printElapsedtimeInMillisAndReset();
+
+			
 			String in = scanner.next();
 			if (in.equals("end"))
 				bc = false;
