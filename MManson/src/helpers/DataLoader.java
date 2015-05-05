@@ -4,6 +4,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Serializable;
 import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 
 public class DataLoader implements Serializable
@@ -13,9 +16,13 @@ public class DataLoader implements Serializable
 	private int N;
 	private int C;
 	
-	//TODO DataLoader(String query, Connection conn)
-	private DataLoader(String query, Connection conn) {
-		throw new UnsupportedOperationException("not implemented yet");
+	//TODO DataLoader(String query, Connection connection)
+	private DataLoader(String query, Connection connection) throws SQLException {
+		rows = new String[10000][];
+		N = 0;
+		C = -1;
+		readDatabase(query, connection);
+		System.out.println(numOfRows() + " rows loaded");
 	}
 	
 	private DataLoader(String filename) throws IOException {
@@ -33,6 +40,24 @@ public class DataLoader implements Serializable
 		readFile(filename, maxRows);
 		System.out.println(numOfRows() + " rows loaded");
 	}
+	
+	private void readDatabase(String query, Connection connection) throws SQLException {
+		Statement statement = connection.createStatement();
+		ResultSet resultSet = statement.executeQuery(query);
+		int resultSetColCount = resultSet.getMetaData().getColumnCount();
+
+		int i = 0;
+		while (resultSet.next()) {
+			rows[i] = new String[resultSetColCount];			
+			N++;
+		    for (int j = 1; j <= resultSetColCount; j++)
+		    	rows[i][j-1] = resultSet.getString(j);
+        	i++;
+        	if (i == rows.length)
+        		expandRows();
+		}
+		resultSet.close();
+	}	
 	
 	private void readFile(String filename) throws IOException {
 		BufferedReader br = null;
@@ -130,5 +155,13 @@ public class DataLoader implements Serializable
 		DataLoader dl = null;
 		dl = new DataLoader(filename, rows);
 		return dl;
+	}
+	
+	public static DataLoader getInstance(String query, Connection connection) throws SQLException {
+		System.out.println("Loading data ...");
+		DataLoader dl = null;
+		dl = new DataLoader(query, connection);
+		return dl;
 	}	
+
 }

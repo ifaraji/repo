@@ -1,8 +1,16 @@
+import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
+import java.sql.SQLException;
+import java.util.ArrayList;
 
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.ParserConfigurationException;
+
+import helpers.DBConnection;
 import helpers.DataLoader;
-import helpers.Stopwatch;
+import helpers.QCDotXMLReader;
+import helpers.TableObj;
 
 //TODO starts a stand-alone rest server
 //TODO exposes table operation as rest api
@@ -10,9 +18,9 @@ import helpers.Stopwatch;
 public class QC {
 	
 	//TODO Process[] processes
-	
-	Table[] tables = new Table[2];
-	int[] finishedTabs = new int[2];
+
+	Table[] tables;
+	int[] finishedTabs;
 	
 	public void tabFinished(int index) {
 		finishedTabs[index] = 1;
@@ -26,11 +34,29 @@ public class QC {
 		return sum == finishedTabs.length;
 	}
 	
-	//TODO loads queries and corresponding table definitions from a XML file
-	private String roll() throws ClassNotFoundException, IOException {
-		DataLoader dl = null;		
-
-		dl = DataLoader.getInstance("..\\..\\tbc.csv");	
+	private String roll() throws ClassNotFoundException, IOException, ParserConfigurationException, SAXException, SQLException {
+		DataLoader dl = null;
+		
+		File xmlDataStructure = new File("..\\..\\qc.xml");
+		
+		ArrayList<TableObj> tableObjs = QCDotXMLReader.getTableObjs(xmlDataStructure);
+		
+		tables = new Table[tableObjs.size()];
+		finishedTabs = new int[tableObjs.size()];
+		
+		int index = 0;
+		for (TableObj tableObj : tableObjs) {
+			
+			dl = DataLoader.getInstance(tableObj.query,DBConnection.getMRPSConnection());
+					
+			tables[index] = new Table(tableObj.columns, dl.numOfRows());
+			tables[index].setId(index);
+			tables[index].load(dl, -1, this);
+			
+			index++;
+		}
+		
+		/*dl = DataLoader.getInstance("..\\..\\tbc.csv");	
 		tables[1] = new Table((new String[]{"ITEM","ITEM_PARENT","PRIMARY_EAN", "TBC"}), dl.numOfRows(), 0);
 		tables[1].setId(1);
 		tables[1].load(dl, 3, this);		
@@ -38,7 +64,7 @@ public class QC {
 		dl = DataLoader.getInstance("..\\..\\mmsil2.csv");	
 		tables[0] = new Table(new String[]{"ITEM","ITEM_PARENT","PRIMARY_EAN","ITEM_NAME","BRAND","PRODUCT_TYPE","COLOUR","COLOUR_CODE","SIZE1","SIZE1_CODE","SECONDARY_SIZE","SECONDARY_SIZE_CODE","DIMENSION","PRICE","HAZCHEM","SUPPLIER","SUPPLIER_COLOR","INNER_PACK_SIZE","EA_LENGTH","EA_WIDTH","EA_HEIGHT","EA_VOLUME","EA_WEIGHT","RETURNABLE_IND","INSTRUCTION_REQ_IND","RESTRICTED_AGE","ITEM_TYPE"}, dl.numOfRows(), 0);
 		tables[0].setId(0); 
-		tables[0].load(dl, -1, this);
+		tables[0].load(dl, -1, this);*/
 		
 		while(!allTabsFinished());
 		
@@ -50,10 +76,22 @@ public class QC {
 	//	return tables[i].operation
 	//}
 	
-	public static void main(String[] args) throws ClassNotFoundException, IOException {
+	public static void main(String[] args) {
 		
 		QC qc = new QC();
-		System.out.println(qc.roll());
+		try {
+			System.out.println(qc.roll());
+		} catch (ParserConfigurationException e) {
+			e.printStackTrace();
+		} catch (SAXException e) {
+			e.printStackTrace();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		
 	}
 

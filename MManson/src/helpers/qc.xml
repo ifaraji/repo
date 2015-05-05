@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<qc>
+	<tables>		
+		<table>
+			<name>my_mrps_sra_lvl2_sum</name>
+			<query>select * from my_mrps_sra_lvl2_sum</query>
+			<columns>
+				<column>tpc</column>
+				<column>category_code</column>
+				<column>brand</column>
+				<column>product_type</column>
+				<column>colour</column>
+				<column>size1</column>
+			</columns>	
+		</table>
+		<table>
+			<name>my_mrps_sra_category</name>
+			<query>select * from my_mrps_sra_category</query>
+			<columns>
+				<column>category_code</column>
+				<column>tpc</column>
+				<column>category_name</column>
+				<column>source_system</column>
+				<column>category_type</column>
+			</columns>
+		</table>
+	</tables>	
+</qc>
