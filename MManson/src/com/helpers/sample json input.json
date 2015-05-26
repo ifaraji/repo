@@ -1,0 +1,36 @@
+"ds":{
+	"table":"table1",
+	"cols":["col1", "col2", "col3", "col4", "col5"],
+	"where":{
+		"or-block":{
+			"and-block":{"col1":"val-1","col2":"val-2"},
+			"col3":"val-3"
+		}	
+	},
+	"join":{
+		"on":["1", "2"],
+		"ds":{
+			"table":"table2",
+			"cols":["col1", "col2", "col3"],
+			"where":{
+				"and-block":{"col1":"val-1"}			
+			},
+			"join":{
+				"on":["1"],
+				"ds":{
+					"table":"table4",
+					"cols":["tpc"],
+					"where":{}
+				}
+			}
+		}
+	},
+	"join":{
+		"on":["3"],
+		"ds":{
+			"table":"table3",
+			"cols":["col1", "col2", "col3"],
+			"where":{}		
+		}
+	}
+}
