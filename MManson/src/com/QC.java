@@ -45,12 +45,11 @@ public class QC {
 		
 		int index = 0;
 		for (TableObj tableObj : tableObjs) {
-			
-			dl = DataLoader.getInstance(tableObj.query,DBConnection.getMRPSConnection());
+			//TODO DBConnection.getMRPSConnection()
+			dl = DataLoader.getInstance(tableObj.query, DBConnection.getMRPSConnection());
 					
-			tables[index] = new Table(tableObj.columns, dl.numOfRows());
-			tables[index].setId(index);
-			tables[index].load(dl, -1, this);
+			tables[index] = new Table(tableObj.columns, dl.numOfRows(), index);
+			tables[index].load(dl, this);
 			
 			index++;
 		}

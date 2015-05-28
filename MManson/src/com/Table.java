@@ -3,6 +3,7 @@ package com;
 import java.io.IOException;
 import java.io.Serializable;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -23,19 +24,20 @@ public class Table implements Serializable{
 		private static final long serialVersionUID = 1L;
 		private String name;
         private IdeenTrieC col;
-        //private Column next; <LL impl>
+        //private Column next; <LL impl>        
     }
     
     //private Column first;    // beginning of bag <LL impl>
     private int colsCount; 		     //number of columns
+    private int rowsCount;
     
     private Column[] columns;
     private String[] columnNames;
+    
+    private HashMap<String, Integer> columnsIdMap;
        
-    public Table(String[] cols, int numOfRows){
-    	columnNames = cols;
-    	colsCount = cols.length;
-    	columns = new Column[colsCount];
+    public Table(String[] cols, int numOfRows, int id){
+    	init(cols, numOfRows, id);
     	
     	for(int i = 0; i < colsCount; i++){
     		columns[i] = new Column();
@@ -44,10 +46,8 @@ public class Table implements Serializable{
     	}
     }
     
-    public Table(String[] cols, int numOfRows, int uniqueColumnIndex){   
-    	columnNames = cols;
-    	colsCount = cols.length;
-    	columns = new Column[colsCount];
+    public Table(String[] cols, int numOfRows, int uniqueColumnIndex, int id){   
+    	init(cols, numOfRows, id);
     	
     	for(int i = 0; i < colsCount; i++){
     		columns[i] = new Column();
@@ -56,26 +56,18 @@ public class Table implements Serializable{
     	}
     }
     
-    /*public QC(String[] cols, int numOfRows, int uniqueColumnIndex, int[] compressedColsIndexes){   
-    	M = cols.length;
-    	columns = new Column[M];
-    	
-    	for(int i = 0; i < M; i++){
-    		columns[i] = new Column();
-    		columns[i].name = cols[i];
-    		boolean compressed = false;
-    		for (int j = 0; j < compressedColsIndexes.length; j++)
-    			if (i == compressedColsIndexes[j])
-    				compressed = true;
-    		columns[i].col = new IdeenTrieC(numOfRows, i == uniqueColumnIndex ? true : false, compressed);
-    	}
-    }*/
-    
-    //TODO ...!!!
-    public void setId(int id) {
+    private void init(String[] cols, int numOfRows, int id) {
+    	columnNames = cols;
+    	colsCount = cols.length;
+    	columns = new Column[colsCount];
+    	rowsCount = numOfRows;
     	tableId = id;
+    	columnsIdMap = new HashMap<String, Integer>();
+    	int value = 0;
+    	for (String columnName : columnNames)
+    		columnsIdMap.put(columnName, value++);
     }
-    
+        
     public Table insert(int columnId, String columnValue, int rowIndex) {
     	columns[columnId].col.insert(columnValue, rowIndex);
     	return this;
@@ -160,8 +152,15 @@ public class Table implements Serializable{
     
     public int[] getRowNumbersContainingPattern(int columnIndex, String regex){  
     	return columns[columnIndex].col.getRowsContainingPattern(regex);
-    }            
+    }      
     
+    public int[] getRowNumbers(){
+    	int[] rows = new int[rowsCount];
+    	for (int i = 0; i < rowsCount; i++)
+    		rows[i] = i + 1;
+    	return rows;
+    }      
+        
     public int[] and(int[] rowNumbers1, int[] rowNumbers2){
     	return IntArrayUtils.intersection(rowNumbers1, rowNumbers2);
     }
@@ -170,45 +169,32 @@ public class Table implements Serializable{
     	return IntArrayUtils.union(rowNumbers1, rowNumbers2);
     }
     
-    //TODO loads this table. 
-    //TODO must be asynchronous
-    //TODO tbc reference is not appropriate here, must be handled in QC where query and table structure is being determined
-    public void load(DataLoader dl, int tbc, QC qc) {
+    public void load(DataLoader dl, QC qc) {
     	
     	class HelperThread extends Thread {
-    		DataLoader dl;
-    		int tbc;
-    		QC qc;
-    		public HelperThread(DataLoader dl, int tbc, QC qc){
+    		//DataLoader dl;
+    		//QC qc;
+    		public HelperThread(DataLoader dl){
     			super();
-    			this.dl = dl;
-    			this.tbc = tbc;
-    			this.qc = qc;
+    			//this.dl = dl;
+    			//this.qc = qc;
     		}
     	}
     	
-    	new HelperThread(dl, tbc, qc) {
+    	new HelperThread(dl) {
     		public void run() {
     			int rowCount = 0;
-    			if (this.tbc < 0)
-    				this.tbc = colsCount;
     			try {
-    				while(this.dl.next()){ 		
+    				while(/*this.*/dl.next()){ 		
     					rowCount++;
-    					String[] row = this.dl.getCurrentRow();
-    					for (int i = 0; i < this.tbc; i++) 
+    					String[] row = /*this.*/dl.getCurrentRow();
+    					for (int i = 0; i < colsCount; i++) 
     						try {
     							insert(i, CharArrayUtils.unqoute(row[i]), rowCount);
     						}catch (ArrayIndexOutOfBoundsException e) {
     							insert(i, "", rowCount);
     						}
 
-    					if (tbc < colsCount) {
-    						StringBuilder mergedCols = new StringBuilder("");
-    						for (int j = tbc; j < row.length; j++)		
-    							mergedCols.append(CharArrayUtils.unqoute(row[j])+" ");
-    						insert(tbc,mergedCols.toString(), rowCount);
-    					}
     					if (rowCount % 100000 == 0) System.out.println("Tab-"+tableId+": " + rowCount + " rows inserted");
     				}
     				seal();
@@ -218,40 +204,12 @@ public class Table implements Serializable{
     			}
     			qc.tabFinished(tableId);
 			}
-    	}.start();
-    	
-		/*int rowCount = 0;
-		if (tbc < 0)
-			tbc = colsCount;
-		try {
-			while(dl.next()){ 		
-				rowCount++;
-				String[] row = dl.getCurrentRow();
-				for (int i = 0; i < tbc; i++) 
-					try {
-						insert(i, CharArrayUtils.unqoute(row[i]), rowCount);
-					}catch (ArrayIndexOutOfBoundsException e) {
-						insert(i, "", rowCount);
-					}
-
-				if (tbc < colsCount) {
-					StringBuilder mergedCols = new StringBuilder("");
-					for (int j = tbc; j < row.length; j++)		
-						mergedCols.append(CharArrayUtils.unqoute(row[j])+" ");
-					insert(tbc,mergedCols.toString(), rowCount);
-				}
-				//if (rowCount % 100000 == 0) System.out.println(rowCount + " rows inserted");
-			}
-			finalize();
-		}
-		catch(Exception e) {
-			e.printStackTrace();
-		}*/
+    	}.start();    	
     }
     
-    //TODO getColsNameIdMap()
-    public Map<String, Integer> getColsNameIdMap(){
-    	throw new UnsupportedOperationException("Not implemented yet!");  
+    @SuppressWarnings("unchecked")
+	public Map<String, Integer> getColsNameIdMap(){
+    	return (Map<String, Integer>) columnsIdMap.clone();  
     }
     
     public static void main(String[] args) throws IOException, ClassNotFoundException, SQLException {
