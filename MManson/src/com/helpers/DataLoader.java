@@ -16,23 +16,25 @@ public class DataLoader implements Serializable
 	private int N;
 	private int C;
 	
-	private DataLoader(String query, Connection connection) throws SQLException {
-		rows = new String[10000][];
+	private DataLoader(String query, Connection connection, int estimatedNumOfRows) throws SQLException {
+		int eNOR = (estimatedNumOfRows == 0? 10000 : estimatedNumOfRows);
+		rows = new String[eNOR][];
 		N = 0;
 		C = -1;
 		readDatabase(query, connection);
 		System.out.println(numOfRows() + " rows loaded");
 	}
 	
-	private DataLoader(String filename) throws IOException {
-		rows = new String[10000][];
+	private DataLoader(String filename, int estimatedNumOfRows) throws IOException {
+		int eNOR = (estimatedNumOfRows == 0? 10000 : estimatedNumOfRows);
+		rows = new String[eNOR][];
 		N = 0;
 		C = -1;
 		readFile(filename);
 		System.out.println(numOfRows() + " rows loaded");
 	}
 	
-	private DataLoader(String filename, int maxRows) throws IOException {
+	private DataLoader(String filename, int maxRows, boolean bMaxRows) throws IOException {
 		rows = new String[10000][];
 		N = 0;
 		C = -1;
@@ -54,6 +56,8 @@ public class DataLoader implements Serializable
         	i++;
         	if (i == rows.length)
         		expandRows();
+        	
+        	if (i % 100000 == 0) System.out.println(i + " rows loaded");
 		}
 		resultSet.close();
 	}	
@@ -142,24 +146,24 @@ public class DataLoader implements Serializable
 		return N;
 	}
 	
-	public static DataLoader getInstance(String filename) throws IOException, ClassNotFoundException {
+	public static DataLoader getInstance(String filename, int estimatedNumOfRows) throws IOException, ClassNotFoundException {
 		System.out.println("Loading data ...");
 		DataLoader dl = null;
-		dl = new DataLoader(filename);
+		dl = new DataLoader(filename, estimatedNumOfRows);
 		return dl;
 	}
 	
-	public static DataLoader getInstance(String filename, int rows) throws IOException, ClassNotFoundException {
+	public static DataLoader getInstance(String filename, int maxRows, boolean bMaxRows) throws IOException, ClassNotFoundException {
 		System.out.println("Loading data ...");
 		DataLoader dl = null;
-		dl = new DataLoader(filename, rows);
+		dl = new DataLoader(filename, maxRows, bMaxRows);
 		return dl;
 	}
 	
-	public static DataLoader getInstance(String query, Connection connection) throws SQLException {
+	public static DataLoader getInstance(String query, Connection connection, int estimatedNumOfRows) throws SQLException {
 		System.out.println("Loading data ...");
 		DataLoader dl = null;
-		dl = new DataLoader(query, connection);
+		dl = new DataLoader(query, connection, estimatedNumOfRows);
 		return dl;
 	}	
 
