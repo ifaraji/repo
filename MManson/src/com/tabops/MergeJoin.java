@@ -2,7 +2,6 @@ package com.tabops;
 
 import java.util.Arrays;
 
-import com.helpers.Stopwatch;
 import com.tabops.helpers.QuickSort;
 
 public class MergeJoin {
@@ -12,18 +11,13 @@ public class MergeJoin {
 	}
 	
 	private static String[][] sortMerge(String[][] a, int ac, String[][] b, int bc) {
-		Stopwatch stopwatch = new Stopwatch();
-		a = QuickSort.sort(a, ac); stopwatch.printElapsedtimeInMillis("sort-1");
-		b = QuickSort.sort(b, bc); stopwatch.printElapsedtimeInMillis("sort-2");
+		a = QuickSort.sort(a, ac);
+		b = QuickSort.sort(b, bc);
 		
-		a = merge(a, ac, b, bc);
-		stopwatch.printElapsedtimeInMillis("merge");
-		return a;
+		return merge(a, ac, b, bc);
 	}
 	
 	private static String[][] merge(String[][] a, int ac, String[][] b, int bc) {
-		if (a == null) return b;
-		if (b == null) return a;
 		int[][] key = new int[a.length + b.length][2];
 		int i = 0, j = 0, k = 0, x = -1;
 		while (i < key.length && j < a.length && k < b.length) {

@@ -499,17 +499,6 @@ public class IdeenTrieC implements Serializable {
 		else
 			return resolveSTValue(ST[ROWS[index]].getData());
 	}
-	
-	public String getRowValue(String path) {
-		return resolveSTValue(root, path, 0);
-	}
-	
-	public String getRowPath(int index) {
-		if (UK)
-			return ByteUtils.byteArrayToPath(ST[index].getData());
-		else
-			return ByteUtils.byteArrayToPath(ST[ROWS[index]].getData());
-	}
 
 	public String find(String key) {
 		Node node = find(root, key);
@@ -606,7 +595,7 @@ public class IdeenTrieC implements Serializable {
 			file.close();
 			System.out.println("Deserialized...");
 		} else {
-			DataLoader dl = DataLoader.getInstance("..\\..\\attrs.csv", 0);
+			DataLoader dl = DataLoader.getInstance("..\\..\\attrs.csv");
 			it = new IdeenTrieC(/*dl.numOfRows()*/ 50, false);
 			int rowCount = 0;
 			String[] row = null;

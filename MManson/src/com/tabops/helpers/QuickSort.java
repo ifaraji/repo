@@ -15,8 +15,6 @@ public class QuickSort {
 	 *            the array to be sorted
 	 */
 	public static String[][] sort(String[][] a, int c) {
-		if (a == null) return a; 
-		
 		int l = a.length;
 		String[] ac = new String[l];
 		int[] aci = new int[l]; 
