@@ -14,6 +14,7 @@ import com.helpers.JSONResultSet;
 import com.helpers.Stopwatch;
 
 //TODO master field search :) (wanna cater for a search scenario like google, just a text box and no dropdowns, full search criteria is entered in the text box like 'black leather pump'; all related fields should be searched)
+//TODO use of UK/PK instead of ROWNUM
 public class Table implements Serializable{
 
 	private static final long serialVersionUID = 1L;
@@ -98,6 +99,25 @@ public class Table implements Serializable{
     	return row;
     }
     
+    public String[] getRowPath(int rowNum){
+    	String[] row = new String[colsCount]; 
+    	for(int i = 0; i < colsCount; i++)
+    		row[i] = columns[i].col.getRowPath(rowNum);
+    	return row;
+    }
+    
+    public String getColumnValue(int colIndex, String path){
+    	String s = columns[colIndex].col.getRowValue(path);
+    	return s;
+    }
+    
+    public String[] getRow(int rowNum, int[] cols){
+    	String[] row = new String[cols.length]; 
+    	for(int i = 0; i < cols.length; i++)
+    		row[i] = columns[cols[i]].col.getRowValue(rowNum);
+    	return row;
+    }
+    
     //TODO should cater for pagination
     public String[][] getRows(int[] rows){
     	String[][] rowSet = new String[rows.length][colsCount];    	
@@ -105,6 +125,22 @@ public class Table implements Serializable{
     		rowSet[i] = getRow(rows[i]);
     	}
     	//TODO sort based on column index
+    	return rowSet;
+    }
+    
+    public String[][] getRows(int[] rows, int[] cols){
+    	String[][] rowSet = new String[rows.length][cols.length];    	
+    	for(int i = 0; i < rows.length; i++) {
+    		rowSet[i] = getRow(rows[i], cols);
+    	}
+    	return rowSet;
+    }
+    
+    public String[][] getRowsPath(int[] rows){
+    	String[][] rowSet = new String[rows.length][colsCount];    	
+    	for(int i = 0; i < rows.length; i++) {
+    		rowSet[i] = getRowPath(rows[i]);
+    	}
     	return rowSet;
     }
     
@@ -127,6 +163,19 @@ public class Table implements Serializable{
     public int[] getRowNumbers(int columnIndex, String key){    	
     	int[] a = columns[columnIndex].col.getRows(key);
     	return a;
+    }
+    
+    public int[] getRowNumbers(int columnIndex, String key, int n){    
+    	if (n == 0)
+    		return getRowNumbers(columnIndex, key);
+    	
+    	int[] a = columns[columnIndex].col.getRows(key);
+    	
+    	int m = Math.min(a.length, n);
+    	int[] t = new int[m];
+    	for (int i=0; i<m; i++)
+    		t[i] = a[i];
+    	return t;
     }
     
     public int[] getRowNumbers(int columnIndex, String[] key){    	
@@ -216,7 +265,7 @@ public class Table implements Serializable{
     	Table qc;
 		Stopwatch stopwatch = new Stopwatch();
 		
-		DataLoader dl = DataLoader.getInstance("..\\..\\mmsil2.csv", 500000);	
+		DataLoader dl = DataLoader.getInstance("..\\..\\mmsil2.csv", 500000, true);	
 		stopwatch.printElapsedtimeAndReset();
 		//qc = new QC(new String[]{"tpc", "category_code", "brand", "product_type", "colour", "size1"}, dl.numOfRows());
 		qc = new Table(new String[]{"ITEM","ITEM_PARENT","PRIMARY_EAN","ITEM_NAME","BRAND","PRODUCT_TYPE","COLOUR","COLOUR_CODE","SIZE1","SIZE1_CODE","SECONDARY_SIZE","SECONDARY_SIZE_CODE","DIMENSION","PRICE","HAZCHEM","SUPPLIER","SUPPLIER_COLOR","INNER_PACK_SIZE","EA_LENGTH","EA_WIDTH","EA_HEIGHT","EA_VOLUME","EA_WEIGHT","RETURNABLE_IND","INSTRUCTION_REQ_IND","RESTRICTED_AGE","ITEM_TYPE"}, dl.numOfRows(), 0);
@@ -316,7 +365,7 @@ public class Table implements Serializable{
 			System.out.println("To JSON string...");
 			stopwatch.printElapsedtimeInMillisAndReset();
 
-			
+			//TODO Is this better than the existing getRowNumbersContainingKeys
 			a = qc.getRowNumbersContaining(3, "strip");
 			int[] b = qc.getRowNumbersContaining(3, "blue");
 			a = qc.and(a, b);

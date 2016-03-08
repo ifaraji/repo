@@ -39,7 +39,11 @@ public class Stopwatch {
 		System.out.println("E T ("+msg+"): " + elapsedTimeInMillis() + " Millis");
 		reset();
 	}
-	
+
+	public void printElapsedtimeInMillis(String msg) {
+		System.out.println("E T ("+msg+"): " + elapsedTimeInMillis() + " Millis");
+	}
+
 	public void reset() {
 		start = System.currentTimeMillis();
 	}
